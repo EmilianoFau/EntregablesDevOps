@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="El Último Renglón, un diario personal para cerrar el día con calma.">
+  <title>El Último Renglón</title>
+  <style>
+    :root {
+      --ink: #352f29;
+      --muted: #756b60;
+      --paper: #f5eedf;
+      --paper-deep: #e9ddc8;
+      --desk: #b6a98f;
+      --sage: #66705a;
+      --sage-dark: #4e5945;
+      --wine: #805b52;
+      --line: rgba(91, 119, 134, .16);
+      --shadow: 0 24px 70px rgba(51, 43, 34, .2);
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,.25), transparent 24%),
+        linear-gradient(135deg, #c8bda8 0%, var(--desk) 52%, #a99b82 100%);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(102,112,90,.32);
+      outline-offset: 3px;
+    }
+
+    .app-shell { width: min(1180px, calc(100% - 28px)); margin: 24px auto; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      margin: 0 auto 14px; color: #373027;
+    }
+    .brand-kicker { margin: 0 0 3px; font: 700 11px/1.2 system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); font-weight: 500; letter-spacing: -.025em; }
+    .version { font: 600 11px/1 system-ui, sans-serif; color: #575046; border: 1px solid rgba(53,47,41,.2); border-radius: 99px; padding: 8px 11px; background: rgba(245,238,223,.45); }
+
+    .book {
+      min-height: 720px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid rgba(70,57,44,.25);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .book::after {
+      content: ""; position: absolute; inset: 0 auto 0 50%; width: 34px; transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, rgba(70,55,39,.07), rgba(255,255,255,.38), rgba(70,55,39,.08), transparent);
+      pointer-events: none; z-index: 3;
+    }
+    .page {
+      position: relative;
+      padding: 46px clamp(28px, 4.5vw, 66px) 38px;
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(90deg, transparent 48px, rgba(134,80,67,.15) 49px, transparent 50px),
+        repeating-linear-gradient(180deg, transparent 0, transparent 31px, var(--line) 32px, transparent 33px),
+        radial-gradient(circle at 20% 10%, rgba(255,255,255,.5), transparent 34%);
+      background-position: 0 0, 0 125px, 0 0;
+    }
+    .page-right { background-image: repeating-linear-gradient(180deg, transparent 0, transparent 31px, var(--line) 32px, transparent 33px), radial-gradient(circle at 80% 8%, rgba(255,255,255,.5), transparent 36%); background-position: 0 125px, 0 0; }
+
+    .date-line { margin: 0 0 7px; color: var(--wine); font-size: 13px; font-style: italic; letter-spacing: .03em; }
+    h2 { margin: 0; font-size: clamp(25px, 3vw, 34px); font-weight: 500; line-height: 1.15; }
+    .intro { color: var(--muted); line-height: 1.6; margin: 9px 0 22px; font-size: 15px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-bottom: 14px; }
+    label { display: grid; gap: 7px; font: 700 11px/1.2 system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: #665d54; }
+    input, select {
+      width: 100%; border: 1px solid rgba(80,69,57,.23); background: rgba(255,252,245,.66); color: var(--ink);
+      padding: 11px 12px; border-radius: 4px;
+    }
+    textarea {
+      display: block; width: 100%; min-height: 315px; resize: vertical; border: 0; color: var(--ink); background: transparent;
+      font-size: 18px; line-height: 32px; padding: 2px 5px; margin-top: 9px;
+    }
+    textarea::placeholder { color: #9a9084; font-style: italic; }
+    .editor-meta { display: flex; justify-content: space-between; align-items: center; min-height: 24px; color: var(--muted); font: 12px/1.3 system-ui, sans-serif; }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-top: 17px; }
+    .button { border: 0; border-radius: 4px; padding: 11px 17px; font: 700 13px/1 system-ui, sans-serif; transition: transform .16s ease, background .16s ease; }
+    .button:hover { transform: translateY(-1px); }
+    .button-primary { color: #fffdf5; background: var(--sage); box-shadow: 0 6px 16px rgba(78,89,69,.2); }
+    .button-primary:hover { background: var(--sage-dark); }
+    .button-quiet { color: var(--ink); background: rgba(255,255,255,.4); border: 1px solid rgba(80,69,57,.18); }
+    .button-danger { color: #7b4137; background: transparent; margin-left: auto; }
+    .button:disabled { opacity: .55; cursor: wait; transform: none; }
+    .status { min-height: 22px; margin: 12px 0 0; color: var(--sage-dark); font: 600 13px/1.4 system-ui, sans-serif; }
+    .status.error { color: #8b4238; }
+
+    .timeline-header { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 19px; }
+    .filter { width: 160px; }
+    .timeline { display: grid; gap: 12px; max-height: 528px; overflow: auto; padding: 2px 9px 8px 2px; scrollbar-color: rgba(102,112,90,.45) transparent; }
+    .entry-card {
+      width: 100%; text-align: left; border: 1px solid rgba(80,69,57,.14); border-left: 3px solid var(--sage);
+      border-radius: 3px; padding: 15px 16px; color: var(--ink); background: rgba(255,252,244,.58);
+      box-shadow: 0 4px 13px rgba(67,55,43,.06); transition: background .15s ease, transform .15s ease;
+    }
+    .entry-card:hover { background: rgba(255,253,247,.9); transform: translateX(2px); }
+    .entry-card.active { border-left-color: var(--wine); background: rgba(255,253,247,.96); }
+    .entry-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 7px; }
+    .entry-date { font-weight: 700; font-size: 15px; }
+    .mood-chip { border-radius: 99px; padding: 5px 8px; color: #5d594f; background: rgba(102,112,90,.12); font: 700 10px/1 system-ui, sans-serif; letter-spacing: .05em; }
+    .entry-preview { margin: 0; color: #6b6258; line-height: 1.45; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .empty { text-align: center; color: var(--muted); padding: 72px 22px; }
+    .empty-mark { display: block; font-size: 30px; margin-bottom: 12px; color: var(--sage); }
+    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font: 12px/1 system-ui, sans-serif; color: var(--muted); }
+    .page-number { position: absolute; bottom: 18px; color: #9a9084; font-size: 12px; font-style: italic; }
+    .page-left .page-number { left: 50%; }
+    .page-right .page-number { right: 50%; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    [hidden] { display: none !important; }
+
+    @media (max-width: 850px) {
+      .app-shell { width: min(680px, calc(100% - 18px)); margin-top: 14px; }
+      .book { grid-template-columns: 1fr; }
+      .book::after { display: none; }
+      .page { min-height: 690px; padding: 34px 27px 42px; background-image: repeating-linear-gradient(180deg, transparent 0, transparent 31px, var(--line) 32px, transparent 33px), radial-gradient(circle at 20% 10%, rgba(255,255,255,.5), transparent 34%); background-position: 0 115px, 0 0; }
+      .page + .page { border-top: 1px solid rgba(80,69,57,.18); }
+      .page-number { display: none; }
+    }
+    @media (max-width: 520px) {
+      .topbar { align-items: end; }
+      .field-row { grid-template-columns: 1fr; }
+      .timeline-header { display: block; }
+      .filter { width: 100%; margin-top: 13px; }
+      textarea { min-height: 270px; }
+      .button-danger { margin-left: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="brand-kicker">Diario personal</p>
+        <h1>El Último Renglón</h1>
+      </div>
+      <span class="version" id="versionLabel" aria-label="Versión activa">...</span>
+    </header>
+
+    <section class="book" aria-label="Diario abierto">
+      <article class="page page-left">
+        <p class="date-line" id="friendlyDate"></p>
+        <h2>¿Cómo terminó tu día?</h2>
+        <p class="intro">Este espacio es solo tuyo. Respirá, bajá el ritmo y dejá unas palabras antes de cerrar el día.</p>
+
+        <form id="entryForm">
+          <div class="field-row">
+            <label>Fecha
+              <input id="entryDate" name="entry_date" type="date" required>
+            </label>
+            <label>Estado de ánimo
+              <select id="mood" name="mood" required><option value="">Elegí cómo te sentís</option></select>
+            </label>
+          </div>
+          <label class="sr-only" for="content">Texto de la entrada</label>
+          <textarea id="content" name="content" maxlength="20000" required placeholder="Hoy quiero recordar..."></textarea>
+          <div class="editor-meta">
+            <span id="wordCount" hidden>0 palabras</span>
+            <span id="editHint">Una entrada por día</span>
+          </div>
+          <div class="actions">
+            <button class="button button-primary" id="saveButton" type="submit">Guardar el día</button>
+            <button class="button button-quiet" id="newButton" type="button">Nueva página</button>
+            <button class="button button-danger" id="deleteButton" type="button" hidden>Eliminar</button>
+          </div>
+          <p class="status" id="formStatus" role="status" aria-live="polite"></p>
+        </form>
+        <span class="page-number">1</span>
+      </article>
+
+      <article class="page page-right">
+        <div class="timeline-header">
+          <div>
+            <p class="date-line">Páginas anteriores</p>
+            <h2>Tu cronología</h2>
+          </div>
+          <label class="filter" id="filterWrap" hidden>Filtrar ánimo
+            <select id="moodFilter"><option value="">Todos</option></select>
+          </label>
+        </div>
+        <div class="timeline" id="timeline" aria-live="polite"></div>
+        <nav class="pager" aria-label="Paginación del diario">
+          <button class="button button-quiet" id="prevButton" type="button">← Anterior</button>
+          <span id="pageInfo">Página 1</span>
+          <button class="button button-quiet" id="nextButton" type="button">Siguiente →</button>
+        </nav>
+        <span class="page-number">2</span>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const state = { entries: [], total: 0, offset: 0, limit: 8, editingId: null, version: 'v1', dirty: false };
+    const moods = {
+      SERENO: 'Sereno', FELIZ: 'Feliz', AGRADECIDO: 'Agradecido', CANSADO: 'Cansado',
+      TRISTE: 'Triste', ANSIOSO: 'Ansioso', REFLEXIVO: 'Reflexivo'
+    };
+    const $ = (selector) => document.querySelector(selector);
+
+    function localISODate() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    }
+    function prettyDate(value, long = true) {
+      return new Intl.DateTimeFormat('es-UY', long
+        ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
+        : { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }
+      ).format(new Date(`${value}T12:00:00Z`));
+    }
+    async function api(path, options = {}) {
+      const response = await fetch(path, { headers: { 'Content-Type': 'application/json', ...options.headers }, ...options });
+      if (!response.ok) {
+        let detail = 'No pudimos completar la acción.';
+        try { const body = await response.json(); detail = typeof body.detail === 'string' ? body.detail : detail; } catch (_) {}
+        throw new Error(detail);
+      }
+      return response.status === 204 ? null : response.json();
+    }
+    function setStatus(message = '', isError = false) {
+      const el = $('#formStatus'); el.textContent = message; el.classList.toggle('error', isError);
+    }
+    function setLoading(loading) { $('#saveButton').disabled = loading; $('#saveButton').textContent = loading ? 'Guardando...' : (state.editingId ? 'Guardar cambios' : 'Guardar el día'); }
+    function fillMoodSelects(items) {
+      for (const mood of items) {
+        const option = new Option(moods[mood] || mood, mood);
+        $('#mood').add(option);
+        $('#moodFilter').add(option.cloneNode(true));
+      }
+    }
+    function updateWordCount() {
+      const count = $('#content').value.trim() ? $('#content').value.trim().split(/\s+/).length : 0;
+      $('#wordCount').textContent = `${count} ${count === 1 ? 'palabra' : 'palabras'}`;
+    }
+    function resetForm(date = localISODate()) {
+      state.editingId = null; state.dirty = false;
+      $('#entryForm').reset(); $('#entryDate').value = date; $('#deleteButton').hidden = true;
+      $('#editHint').textContent = 'Una entrada por día'; setStatus(); setLoading(false); updateWordCount();
+      document.querySelectorAll('.entry-card').forEach(el => el.classList.remove('active'));
+    }
+    function editEntry(entry) {
+      state.editingId = entry.id; state.dirty = false;
+      $('#entryDate').value = entry.entry_date; $('#mood').value = entry.mood; $('#content').value = entry.content;
+      $('#deleteButton').hidden = false; $('#editHint').textContent = 'Editando una página guardada'; setStatus(); setLoading(false); updateWordCount();
+      document.querySelectorAll('.entry-card').forEach(el => el.classList.toggle('active', el.dataset.id === entry.id));
+      if (window.innerWidth < 851) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function renderTimeline() {
+      const timeline = $('#timeline'); timeline.replaceChildren();
+      if (!state.entries.length) {
+        const empty = document.createElement('div'); empty.className = 'empty';
+        const mark = document.createElement('span'); mark.className = 'empty-mark'; mark.textContent = '❧';
+        const text = document.createElement('p'); text.textContent = $('#moodFilter').value ? 'No hay páginas con ese ánimo.' : 'Tu primera página está esperando.';
+        empty.append(mark, text); timeline.append(empty);
+      } else {
+        for (const entry of state.entries) {
+          const card = document.createElement('button'); card.type = 'button'; card.className = 'entry-card'; card.dataset.id = entry.id;
+          const top = document.createElement('div'); top.className = 'entry-top';
+          const date = document.createElement('span'); date.className = 'entry-date'; date.textContent = prettyDate(entry.entry_date, false);
+          const mood = document.createElement('span'); mood.className = 'mood-chip'; mood.textContent = moods[entry.mood] || entry.mood;
+          const preview = document.createElement('p'); preview.className = 'entry-preview'; preview.textContent = entry.content;
+          top.append(date, mood); card.append(top, preview); card.addEventListener('click', () => editEntry(entry)); timeline.append(card);
+        }
+      }
+      const page = Math.floor(state.offset / state.limit) + 1;
+      const pages = Math.max(1, Math.ceil(state.total / state.limit));
+      $('#pageInfo').textContent = `Página ${page} de ${pages}`;
+      $('#prevButton').disabled = state.offset === 0; $('#nextButton').disabled = state.offset + state.limit >= state.total;
+    }
+    async function loadEntries() {
+      const mood = state.version === 'v2' ? $('#moodFilter').value : '';
+      const params = new URLSearchParams({ limit: state.limit, offset: state.offset });
+      if (mood) params.set('mood', mood);
+      try { const data = await api(`/api/entries?${params}`); state.entries = data.items; state.total = data.total; renderTimeline(); }
+      catch (error) {
+        const timeline = $('#timeline'); timeline.replaceChildren();
+        const empty = document.createElement('div'); empty.className = 'empty';
+        const mark = document.createElement('span'); mark.className = 'empty-mark'; mark.textContent = '!';
+        const message = document.createElement('p'); message.textContent = error.message;
+        empty.append(mark, message); timeline.append(empty);
+      }
+    }
+    async function initialize() {
+      $('#entryDate').value = localISODate(); $('#friendlyDate').textContent = prettyDate(localISODate());
+      try {
+        const [moodList, version] = await Promise.all([api('/api/moods'), api('/api/version')]);
+        state.version = version.version.toLowerCase(); fillMoodSelects(moodList);
+        $('#versionLabel').textContent = `${version.version} · ${version.color}`;
+        const v2 = state.version === 'v2'; $('#filterWrap').hidden = !v2; $('#wordCount').hidden = !v2;
+      } catch (error) { setStatus('No pudimos conectar con el diario. Reintentá en unos segundos.', true); }
+      await loadEntries(); updateWordCount();
+    }
+
+    $('#entryForm').addEventListener('submit', async (event) => {
+      event.preventDefault(); setLoading(true); setStatus();
+      const payload = { entry_date: $('#entryDate').value, mood: $('#mood').value, content: $('#content').value };
+      try {
+        const path = state.editingId ? `/api/entries/${state.editingId}` : '/api/entries';
+        const method = state.editingId ? 'PUT' : 'POST';
+        const saved = await api(path, { method, body: JSON.stringify(payload) });
+        state.editingId = saved.id; state.dirty = false; $('#deleteButton').hidden = false;
+        setStatus('Tu día quedó guardado.'); await loadEntries(); editEntry(saved); setStatus('Tu día quedó guardado.');
+      } catch (error) { setStatus(error.message, true); } finally { setLoading(false); }
+    });
+    $('#newButton').addEventListener('click', () => resetForm());
+    $('#deleteButton').addEventListener('click', async () => {
+      if (!state.editingId || !confirm('¿Querés eliminar esta página? Esta acción no se puede deshacer.')) return;
+      try { await api(`/api/entries/${state.editingId}`, { method: 'DELETE' }); resetForm(); setStatus('La página fue eliminada.'); await loadEntries(); }
+      catch (error) { setStatus(error.message, true); }
+    });
+    $('#content').addEventListener('input', () => { state.dirty = true; updateWordCount(); });
+    $('#entryDate').addEventListener('change', () => { state.dirty = true; });
+    $('#mood').addEventListener('change', () => { state.dirty = true; });
+    $('#moodFilter').addEventListener('change', () => { state.offset = 0; loadEntries(); });
+    $('#prevButton').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); loadEntries(); });
+    $('#nextButton').addEventListener('click', () => { state.offset += state.limit; loadEntries(); });
+    window.addEventListener('beforeunload', (event) => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
+    initialize();
+  </script>
+</body>
+</html>

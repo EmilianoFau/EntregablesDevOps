@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: journal-config
+  namespace: journal
+data:
+  POSTGRES_DB: journal
+  POSTGRES_USER: journal
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: journal-secret
+  namespace: journal
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: change-me-before-production
+  DATABASE_URL: postgresql+psycopg://journal:change-me-before-production@postgres:5432/journal
+
