@@ -3,334 +3,208 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="El Último Renglón, un diario personal para cerrar el día con calma.">
-  <title>El Último Renglón</title>
+  <meta name="description" content="Un ratito para vos. Escribí tu día y guardá esos pequeños momentos.">
+  <title>El Último Renglón · Tu diario</title>
   <style>
-    :root {
-      --ink: #352f29;
-      --muted: #756b60;
-      --paper: #f5eedf;
-      --paper-deep: #e9ddc8;
-      --desk: #b6a98f;
-      --sage: #66705a;
-      --sage-dark: #4e5945;
-      --wine: #805b52;
-      --line: rgba(91, 119, 134, .16);
-      --shadow: 0 24px 70px rgba(51, 43, 34, .2);
-      --radius: 6px;
-    }
-
-    * { box-sizing: border-box; }
-    html { color-scheme: light; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 18% 12%, rgba(255,255,255,.25), transparent 24%),
-        linear-gradient(135deg, #c8bda8 0%, var(--desk) 52%, #a99b82 100%);
-      font-family: Georgia, "Times New Roman", serif;
-    }
-    button, input, select, textarea { font: inherit; }
-    button { cursor: pointer; }
-    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-      outline: 3px solid rgba(102,112,90,.32);
-      outline-offset: 3px;
-    }
-
-    .app-shell { width: min(1180px, calc(100% - 28px)); margin: 24px auto; }
-    .topbar {
-      display: flex; align-items: center; justify-content: space-between; gap: 24px;
-      margin: 0 auto 14px; color: #373027;
-    }
-    .brand-kicker { margin: 0 0 3px; font: 700 11px/1.2 system-ui, sans-serif; letter-spacing: .2em; text-transform: uppercase; }
-    h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); font-weight: 500; letter-spacing: -.025em; }
-    .version { font: 600 11px/1 system-ui, sans-serif; color: #575046; border: 1px solid rgba(53,47,41,.2); border-radius: 99px; padding: 8px 11px; background: rgba(245,238,223,.45); }
-
-    .book {
-      min-height: 720px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      overflow: hidden;
-      background: var(--paper);
-      border: 1px solid rgba(70,57,44,.25);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      position: relative;
-    }
-    .book::after {
-      content: ""; position: absolute; inset: 0 auto 0 50%; width: 34px; transform: translateX(-50%);
-      background: linear-gradient(90deg, transparent, rgba(70,55,39,.07), rgba(255,255,255,.38), rgba(70,55,39,.08), transparent);
-      pointer-events: none; z-index: 3;
-    }
-    .page {
-      position: relative;
-      padding: 46px clamp(28px, 4.5vw, 66px) 38px;
-      background-color: var(--paper);
-      background-image:
-        linear-gradient(90deg, transparent 48px, rgba(134,80,67,.15) 49px, transparent 50px),
-        repeating-linear-gradient(180deg, transparent 0, transparent 31px, var(--line) 32px, transparent 33px),
-        radial-gradient(circle at 20% 10%, rgba(255,255,255,.5), transparent 34%);
-      background-position: 0 0, 0 125px, 0 0;
-    }
-    .page-right { background-image: repeating-linear-gradient(180deg, transparent 0, transparent 31px, var(--line) 32px, transparent 33px), radial-gradient(circle at 80% 8%, rgba(255,255,255,.5), transparent 36%); background-position: 0 125px, 0 0; }
-
-    .date-line { margin: 0 0 7px; color: var(--wine); font-size: 13px; font-style: italic; letter-spacing: .03em; }
-    h2 { margin: 0; font-size: clamp(25px, 3vw, 34px); font-weight: 500; line-height: 1.15; }
-    .intro { color: var(--muted); line-height: 1.6; margin: 9px 0 22px; font-size: 15px; }
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; margin-bottom: 14px; }
-    label { display: grid; gap: 7px; font: 700 11px/1.2 system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: #665d54; }
-    input, select {
-      width: 100%; border: 1px solid rgba(80,69,57,.23); background: rgba(255,252,245,.66); color: var(--ink);
-      padding: 11px 12px; border-radius: 4px;
-    }
-    textarea {
-      display: block; width: 100%; min-height: 315px; resize: vertical; border: 0; color: var(--ink); background: transparent;
-      font-size: 18px; line-height: 32px; padding: 2px 5px; margin-top: 9px;
-    }
-    textarea::placeholder { color: #9a9084; font-style: italic; }
-    .editor-meta { display: flex; justify-content: space-between; align-items: center; min-height: 24px; color: var(--muted); font: 12px/1.3 system-ui, sans-serif; }
-    .actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-top: 17px; }
-    .button { border: 0; border-radius: 4px; padding: 11px 17px; font: 700 13px/1 system-ui, sans-serif; transition: transform .16s ease, background .16s ease; }
-    .button:hover { transform: translateY(-1px); }
-    .button-primary { color: #fffdf5; background: var(--sage); box-shadow: 0 6px 16px rgba(78,89,69,.2); }
-    .button-primary:hover { background: var(--sage-dark); }
-    .button-quiet { color: var(--ink); background: rgba(255,255,255,.4); border: 1px solid rgba(80,69,57,.18); }
-    .button-danger { color: #7b4137; background: transparent; margin-left: auto; }
-    .button:disabled { opacity: .55; cursor: wait; transform: none; }
-    .status { min-height: 22px; margin: 12px 0 0; color: var(--sage-dark); font: 600 13px/1.4 system-ui, sans-serif; }
-    .status.error { color: #8b4238; }
-
-    .timeline-header { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 19px; }
-    .filter { width: 160px; }
-    .timeline { display: grid; gap: 12px; max-height: 528px; overflow: auto; padding: 2px 9px 8px 2px; scrollbar-color: rgba(102,112,90,.45) transparent; }
-    .entry-card {
-      width: 100%; text-align: left; border: 1px solid rgba(80,69,57,.14); border-left: 3px solid var(--sage);
-      border-radius: 3px; padding: 15px 16px; color: var(--ink); background: rgba(255,252,244,.58);
-      box-shadow: 0 4px 13px rgba(67,55,43,.06); transition: background .15s ease, transform .15s ease;
-    }
-    .entry-card:hover { background: rgba(255,253,247,.9); transform: translateX(2px); }
-    .entry-card.active { border-left-color: var(--wine); background: rgba(255,253,247,.96); }
-    .entry-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 7px; }
-    .entry-date { font-weight: 700; font-size: 15px; }
-    .mood-chip { border-radius: 99px; padding: 5px 8px; color: #5d594f; background: rgba(102,112,90,.12); font: 700 10px/1 system-ui, sans-serif; letter-spacing: .05em; }
-    .entry-preview { margin: 0; color: #6b6258; line-height: 1.45; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .empty { text-align: center; color: var(--muted); padding: 72px 22px; }
-    .empty-mark { display: block; font-size: 30px; margin-bottom: 12px; color: var(--sage); }
-    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font: 12px/1 system-ui, sans-serif; color: var(--muted); }
-    .page-number { position: absolute; bottom: 18px; color: #9a9084; font-size: 12px; font-style: italic; }
-    .page-left .page-number { left: 50%; }
-    .page-right .page-number { right: 50%; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-    [hidden] { display: none !important; }
-
-    @media (max-width: 850px) {
-      .app-shell { width: min(680px, calc(100% - 18px)); margin-top: 14px; }
-      .book { grid-template-columns: 1fr; }
-      .book::after { display: none; }
-      .page { min-height: 690px; padding: 34px 27px 42px; background-image: repeating-linear-gradient(180deg, transparent 0, transparent 31px, var(--line) 32px, transparent 33px), radial-gradient(circle at 20% 10%, rgba(255,255,255,.5), transparent 34%); background-position: 0 115px, 0 0; }
-      .page + .page { border-top: 1px solid rgba(80,69,57,.18); }
-      .page-number { display: none; }
-    }
-    @media (max-width: 520px) {
-      .topbar { align-items: end; }
-      .field-row { grid-template-columns: 1fr; }
-      .timeline-header { display: block; }
-      .filter { width: 100%; margin-top: 13px; }
-      textarea { min-height: 270px; }
-      .button-danger { margin-left: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+    :root { --ink:#252830; --muted:#70747d; --line:#eeeff2; --blue:#3457ed; --blue-dark:#2443ca; --bg:#f7f8fa; --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; --sans:"Avenir Next",Avenir,"Segoe UI",system-ui,sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+    button,select,textarea { font:inherit; }
+    button { cursor:pointer; }
+    button:disabled { cursor:default; opacity:.5; }
+    button,select { -webkit-tap-highlight-color:transparent; }
+    :focus-visible { outline:3px solid #3457ed66; outline-offset:4px; }
+    [hidden] { display:none !important; }
+    .shell { max-width:1000px; margin:auto; padding:36px 28px 48px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:44px; }
+    .brand { display:flex; gap:10px; align-items:center; font-size:15px; font-weight:700; letter-spacing:-.3px; }
+    .brand-mark { color:var(--blue); font-size:28px; line-height:1; }
+    .tagline { color:var(--muted); font-size:12px; }
+    .intro { text-align:center; margin-bottom:28px; }
+    .eyebrow { margin:0 0 12px; color:var(--muted); font-size:11px; letter-spacing:2px; font-weight:600; text-transform:uppercase; }
+    h1 { margin:0; font:500 clamp(36px,5.5vw,52px)/1.2 var(--serif); letter-spacing:-1.5px; }
+    .intro p:last-child { margin:13px 0 0; color:var(--muted); font-size:14px; line-height:1.6; }
+    .tabs { display:flex; gap:4px; padding:5px; background:#eaecef; border-radius:12px; width:fit-content; margin:28px auto 30px; }
+    .tab { border:0; background:transparent; border-radius:8px; padding:11px 25px; color:#656a74; font-size:13px; font-weight:650; }
+    .tab[aria-selected="true"] { color:var(--blue); background:white; box-shadow:0 2px 5px #20263009; }
+    .paper { max-width:800px; margin:auto; background:#fff; border:1px solid #e9ebef; border-radius:10px; box-shadow:0 8px 35px #1d2b4605; padding:40px 48px 28px; min-height:555px; }
+    .paper-top { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:25px; }
+    .today-tag { color:#53606a; font-size:11px; text-transform:uppercase; font-weight:650; letter-spacing:1.4px; }
+    .date { display:block; font-size:14px; margin-top:7px; font-weight:600; letter-spacing:.2px; }
+    .page-note { color:#858a94; font-size:11px; text-align:right; line-height:1.7; }
+    fieldset { border:0; padding:0; margin:0; }
+    legend { font-size:13px; font-weight:600; padding:0; margin-bottom:12px; }
+    .moods { display:flex; gap:7px; flex-wrap:wrap; }
+    .mood { --tone:#3457ed; border:1px solid #e8eaee; border-radius:100px; padding:8px 11px; display:flex; gap:7px; align-items:center; background:white; color:#676c76; font-size:11px; transition:background .15s,border-color .15s; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--tone); flex:none; }
+    .mood[aria-pressed="true"] { color:var(--tone); border-color:var(--tone); background:color-mix(in srgb,var(--tone) 8%,white); font-weight:700; }
+    .mood:hover { border-color:var(--tone); }
+    textarea { width:100%; min-height:250px; border:0; background:none; resize:vertical; padding:29px 0 16px; color:#30343c; font:400 21px/1.75 var(--serif); }
+    textarea:focus { outline:none; }
+    textarea:focus-visible { box-shadow:inset 3px 0 #3457ed22; padding-left:14px; }
+    textarea::placeholder { color:#aaaeb6; }
+    .editor-footer { display:flex; justify-content:space-between; align-items:center; gap:15px; border-top:1px solid var(--line); padding-top:20px; }
+    .counter { font-size:11px; color:#858a94; }
+    .button { border:0; padding:12px 20px; border-radius:9px; font-size:12px; font-weight:650; background:var(--blue); color:white; transition:background .15s; }
+    .button:hover:not(:disabled) { background:var(--blue-dark); }
+    .quiet { background:#f0f2f6; color:#545b69; }
+    .quiet:hover:not(:disabled) { background:#e6e9f0; }
+    .status { min-height:19px; margin:15px 0 0; font-size:12px; color:#357351; line-height:1.5; }
+    .status.error { color:#ba4242; }
+    .status-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .small-link { padding:0; border:0; background:none; color:var(--blue); font-size:12px; white-space:nowrap; }
+    .footnote { margin:22px auto 0; text-align:center; color:#9297a0; font-size:11px; line-height:1.7; }
+    .log-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px; }
+    h2 { font:500 29px/1.2 var(--serif); margin:0 0 7px; letter-spacing:-.5px; }
+    .subtitle { margin:0; font-size:12px; color:var(--muted); }
+    select { max-width:155px; font-size:12px; border:1px solid #e8eaee; color:#656b75; padding:9px 10px; border-radius:8px; background:#fff; }
+    .entry-card { width:100%; display:block; text-align:left; padding:21px 0; border:0; border-bottom:1px solid var(--line); background:none; color:var(--ink); }
+    .entry-card:hover .entry-date { color:var(--blue); }
+    .entry-top { display:flex; align-items:center; gap:12px; justify-content:space-between; margin-bottom:9px; }
+    .entry-date { font-size:14px; font-weight:600; }
+    .mood-label { display:inline-flex; align-items:center; gap:7px; font-size:11px; color:#717782; }
+    .entry-preview { font:17px/1.6 var(--serif); color:#777d86; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .read-hint { display:block; font-size:10px; color:#9a9fa8; margin-top:12px; }
+    .empty { padding:85px 12px; text-align:center; color:var(--muted); font-size:14px; line-height:1.8; }
+    .empty strong { display:block; font:26px/1.5 var(--serif); color:var(--ink); margin-bottom:7px; }
+    .pager { display:flex; align-items:center; justify-content:space-between; margin-top:24px; gap:12px; font-size:11px; color:var(--muted); }
+    .pager button { border:0; background:transparent; padding:7px 0; color:var(--blue); font-size:12px; }
+    .back { border:0; background:none; padding:0; color:var(--blue); font-size:12px; margin-bottom:30px; }
+    .read-content { white-space:pre-wrap; overflow-wrap:anywhere; font:21px/1.85 var(--serif); margin:25px 0 35px; }
+    .read-only { font-size:11px; color:#9297a0; padding-top:20px; border-top:1px solid var(--line); }
+    .version { text-align:center; margin:28px 0 0; font-size:10px; color:#afb3bb; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media(max-width:600px) { .shell { padding:24px 16px 30px; } .topbar { margin-bottom:36px; } .tagline { display:none; } .brand { font-size:13px; } .paper { padding:27px 23px 22px; min-height:530px; } .page-note { max-width:110px; } textarea { min-height:250px; font-size:20px; } .log-header { align-items:start; } .mood { padding:8px 10px; } .intro p:last-child { max-width:275px; margin:13px auto 0; } }
+    @media(prefers-reduced-motion:reduce) { * { transition:none !important; scroll-behavior:auto !important; } }
   </style>
 </head>
 <body>
-  <main class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="brand-kicker">Diario personal</p>
-        <h1>El Último Renglón</h1>
-      </div>
-      <span class="version" id="versionLabel" aria-label="Versión activa">...</span>
-    </header>
-
-    <section class="book" aria-label="Diario abierto">
-      <article class="page page-left">
-        <p class="date-line" id="friendlyDate"></p>
-        <h2>¿Cómo terminó tu día?</h2>
-        <p class="intro">Este espacio es solo tuyo. Respirá, bajá el ritmo y dejá unas palabras antes de cerrar el día.</p>
-
-        <form id="entryForm">
-          <div class="field-row">
-            <label>Fecha
-              <input id="entryDate" name="entry_date" type="date" required>
-            </label>
-            <label>Estado de ánimo
-              <select id="mood" name="mood" required><option value="">Elegí cómo te sentís</option></select>
-            </label>
-          </div>
-          <label class="sr-only" for="content">Texto de la entrada</label>
-          <textarea id="content" name="content" maxlength="20000" required placeholder="Hoy quiero recordar..."></textarea>
-          <div class="editor-meta">
-            <span id="wordCount" hidden>0 palabras</span>
-            <span id="editHint">Una entrada por día</span>
-          </div>
-          <div class="actions">
-            <button class="button button-primary" id="saveButton" type="submit">Guardar el día</button>
-            <button class="button button-quiet" id="newButton" type="button">Nueva página</button>
-            <button class="button button-danger" id="deleteButton" type="button" hidden>Eliminar</button>
-          </div>
-          <p class="status" id="formStatus" role="status" aria-live="polite"></p>
-        </form>
-        <span class="page-number">1</span>
-      </article>
-
-      <article class="page page-right">
-        <div class="timeline-header">
-          <div>
-            <p class="date-line">Páginas anteriores</p>
-            <h2>Tu cronología</h2>
-          </div>
-          <label class="filter" id="filterWrap" hidden>Filtrar ánimo
-            <select id="moodFilter"><option value="">Todos</option></select>
-          </label>
-        </div>
-        <div class="timeline" id="timeline" aria-live="polite"></div>
-        <nav class="pager" aria-label="Paginación del diario">
-          <button class="button button-quiet" id="prevButton" type="button">← Anterior</button>
-          <span id="pageInfo">Página 1</span>
-          <button class="button button-quiet" id="nextButton" type="button">Siguiente →</button>
-        </nav>
-        <span class="page-number">2</span>
-      </article>
+  <main class="shell">
+    <header class="topbar"><div class="brand"><span class="brand-mark" aria-hidden="true">✳</span> El Último Renglón</div><span class="tagline">Pequeños momentos, para guardar.</span></header>
+    <div class="intro"><p class="eyebrow">Tu pausa del día</p><h1>Un ratito para vos.</h1><p>No tiene que ser un gran día para merecer una página.</p></div>
+    <div class="tabs" role="tablist" aria-label="Secciones del diario">
+      <button class="tab" id="writeTab" role="tab" aria-selected="true" aria-controls="writePanel" tabindex="0">Escribir</button>
+      <button class="tab" id="logsTab" role="tab" aria-selected="false" aria-controls="logsPanel" tabindex="-1">Mis logs</button>
+    </div>
+    <section class="paper" id="writePanel" role="tabpanel" aria-labelledby="writeTab">
+      <div class="paper-top"><div><span class="today-tag">Hoy, tu página en blanco</span><time class="date" id="todayDate">Cargando fecha…</time></div><span class="page-note">Sin apuro.<br>Sin palabras perfectas.</span></div>
+      <form id="entryForm">
+        <fieldset id="moodField" disabled><legend>¿Cómo te sentís hoy?</legend><div class="moods" id="moods"></div></fieldset>
+        <label class="sr-only" for="content">Lo que querés recordar de hoy</label>
+        <textarea id="content" maxlength="20000" required disabled placeholder="Hoy quiero recordar…"></textarea>
+        <div class="editor-footer"><span class="counter" id="wordCount">0 palabras</span><button class="button" type="submit" id="saveButton" disabled>Guardar mi día ↗</button></div>
+        <div class="status-bar"><p class="status" id="formStatus" role="status" aria-live="polite"></p><button class="small-link" id="reloadToday" type="button" hidden>Abrir hoy</button><button class="small-link" id="retryToday" type="button" hidden>Reintentar</button></div>
+      </form>
     </section>
+    <section class="paper" id="logsPanel" role="tabpanel" aria-labelledby="logsTab" hidden>
+      <div id="logList"><div class="log-header"><div><h2>Días para recordar.</h2><p class="subtitle">Tu historia, una página a la vez.</p></div><label><span class="sr-only">Filtrar por estado de ánimo</span><select id="moodFilter"><option value="">Todos los ánimos</option></select></label></div><div id="timeline" aria-live="polite"></div><nav class="pager" aria-label="Páginas de logs"><button id="prevButton" type="button">← Más recientes</button><span id="pageInfo"></span><button id="nextButton" type="button">Más antiguos →</button></nav></div>
+      <article id="reader" hidden><button class="back" id="backToLogs" type="button">← Volver a mis logs</button><h2 id="readDate"></h2><span class="mood-label" id="readMood"></span><p class="read-content" id="readContent"></p><p class="read-only" id="readNote"></p></article>
+    </section>
+    <p class="footnote" id="footnote">Podés volver a editar hoy. Mañana, esta página será un recuerdo.</p>
+    <p class="version" id="versionLabel"></p>
   </main>
-
   <script>
-    const state = { entries: [], total: 0, offset: 0, limit: 8, editingId: null, version: 'v1', dirty: false };
-    const moods = {
-      SERENO: 'Sereno', FELIZ: 'Feliz', AGRADECIDO: 'Agradecido', CANSADO: 'Cansado',
-      TRISTE: 'Triste', ANSIOSO: 'Ansioso', REFLEXIVO: 'Reflexivo'
+    const $ = selector => document.querySelector(selector);
+    const moodOptions = {
+      SERENO:{label:'Sereno',color:'#16835c'}, FELIZ:{label:'Feliz',color:'#be7500'}, AGRADECIDO:{label:'Agradecido',color:'#ca4975'},
+      CANSADO:{label:'Cansado',color:'#787184'}, TRISTE:{label:'Triste',color:'#467cc1'}, ANSIOSO:{label:'Ansioso',color:'#bd6426'}, REFLEXIVO:{label:'Reflexivo',color:'#7659c9'}
     };
-    const $ = (selector) => document.querySelector(selector);
-
-    function localISODate() {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const state = { today:null, id:null, mood:null, dirty:false, expired:false, ready:false, saving:false, offset:0, limit:6, total:0, items:[], request:0 };
+    function dateLabel(value) { const [year,month,day] = value.split('-'); return `${day}/${month}/${year}`; }
+    function longDate(value) { return new Intl.DateTimeFormat('es-UY',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${value}T12:00:00Z`)); }
+    async function api(path, options={}) {
+      const response = await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers},cache:'no-store'});
+      if (!response.ok) { let message='No pudimos conectar. Tu texto sigue acá.'; try { const body=await response.json(); if(typeof body.detail==='string') message=body.detail; } catch {} const error=new Error(message); error.status=response.status; throw error; }
+      return response.status===204 ? null : response.json();
     }
-    function prettyDate(value, long = true) {
-      return new Intl.DateTimeFormat('es-UY', long
-        ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
-        : { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }
-      ).format(new Date(`${value}T12:00:00Z`));
+    function status(message='',error=false) { $('#formStatus').textContent=message; $('#formStatus').classList.toggle('error',error); }
+    function controls() {
+      const locked=!state.ready||state.expired||state.saving;
+      $('#moodField').disabled=locked; $('#content').disabled=!state.ready; $('#content').readOnly=state.expired||state.saving;
+      $('#saveButton').disabled=locked; $('#saveButton').textContent=state.saving?'Guardando…':state.id?'Guardar cambios ↗':'Guardar mi día ↗';
     }
-    async function api(path, options = {}) {
-      const response = await fetch(path, { headers: { 'Content-Type': 'application/json', ...options.headers }, ...options });
-      if (!response.ok) {
-        let detail = 'No pudimos completar la acción.';
-        try { const body = await response.json(); detail = typeof body.detail === 'string' ? body.detail : detail; } catch (_) {}
-        throw new Error(detail);
-      }
-      return response.status === 204 ? null : response.json();
-    }
-    function setStatus(message = '', isError = false) {
-      const el = $('#formStatus'); el.textContent = message; el.classList.toggle('error', isError);
-    }
-    function setLoading(loading) { $('#saveButton').disabled = loading; $('#saveButton').textContent = loading ? 'Guardando...' : (state.editingId ? 'Guardar cambios' : 'Guardar el día'); }
-    function fillMoodSelects(items) {
-      for (const mood of items) {
-        const option = new Option(moods[mood] || mood, mood);
-        $('#mood').add(option);
-        $('#moodFilter').add(option.cloneNode(true));
-      }
-    }
-    function updateWordCount() {
-      const count = $('#content').value.trim() ? $('#content').value.trim().split(/\s+/).length : 0;
-      $('#wordCount').textContent = `${count} ${count === 1 ? 'palabra' : 'palabras'}`;
-    }
-    function resetForm(date = localISODate()) {
-      state.editingId = null; state.dirty = false;
-      $('#entryForm').reset(); $('#entryDate').value = date; $('#deleteButton').hidden = true;
-      $('#editHint').textContent = 'Una entrada por día'; setStatus(); setLoading(false); updateWordCount();
-      document.querySelectorAll('.entry-card').forEach(el => el.classList.remove('active'));
-    }
-    function editEntry(entry) {
-      state.editingId = entry.id; state.dirty = false;
-      $('#entryDate').value = entry.entry_date; $('#mood').value = entry.mood; $('#content').value = entry.content;
-      $('#deleteButton').hidden = false; $('#editHint').textContent = 'Editando una página guardada'; setStatus(); setLoading(false); updateWordCount();
-      document.querySelectorAll('.entry-card').forEach(el => el.classList.toggle('active', el.dataset.id === entry.id));
-      if (window.innerWidth < 851) window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    function renderTimeline() {
-      const timeline = $('#timeline'); timeline.replaceChildren();
-      if (!state.entries.length) {
-        const empty = document.createElement('div'); empty.className = 'empty';
-        const mark = document.createElement('span'); mark.className = 'empty-mark'; mark.textContent = '❧';
-        const text = document.createElement('p'); text.textContent = $('#moodFilter').value ? 'No hay páginas con ese ánimo.' : 'Tu primera página está esperando.';
-        empty.append(mark, text); timeline.append(empty);
-      } else {
-        for (const entry of state.entries) {
-          const card = document.createElement('button'); card.type = 'button'; card.className = 'entry-card'; card.dataset.id = entry.id;
-          const top = document.createElement('div'); top.className = 'entry-top';
-          const date = document.createElement('span'); date.className = 'entry-date'; date.textContent = prettyDate(entry.entry_date, false);
-          const mood = document.createElement('span'); mood.className = 'mood-chip'; mood.textContent = moods[entry.mood] || entry.mood;
-          const preview = document.createElement('p'); preview.className = 'entry-preview'; preview.textContent = entry.content;
-          top.append(date, mood); card.append(top, preview); card.addEventListener('click', () => editEntry(entry)); timeline.append(card);
-        }
-      }
-      const page = Math.floor(state.offset / state.limit) + 1;
-      const pages = Math.max(1, Math.ceil(state.total / state.limit));
-      $('#pageInfo').textContent = `Página ${page} de ${pages}`;
-      $('#prevButton').disabled = state.offset === 0; $('#nextButton').disabled = state.offset + state.limit >= state.total;
-    }
-    async function loadEntries() {
-      const mood = state.version === 'v2' ? $('#moodFilter').value : '';
-      const params = new URLSearchParams({ limit: state.limit, offset: state.offset });
-      if (mood) params.set('mood', mood);
-      try { const data = await api(`/api/entries?${params}`); state.entries = data.items; state.total = data.total; renderTimeline(); }
-      catch (error) {
-        const timeline = $('#timeline'); timeline.replaceChildren();
-        const empty = document.createElement('div'); empty.className = 'empty';
-        const mark = document.createElement('span'); mark.className = 'empty-mark'; mark.textContent = '!';
-        const message = document.createElement('p'); message.textContent = error.message;
-        empty.append(mark, message); timeline.append(empty);
-      }
-    }
-    async function initialize() {
-      $('#entryDate').value = localISODate(); $('#friendlyDate').textContent = prettyDate(localISODate());
+    function chooseMood(value, dirty=false) { state.mood=value; if(dirty) state.dirty=true; document.querySelectorAll('.mood').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mood===value))); }
+    function countWords() { const text=$('#content').value.trim(); const words=text?text.split(/\s+/).length:0; $('#wordCount').textContent=`${words} ${words===1?'palabra':'palabras'}`; }
+    function setExpired() { state.expired=true; controls(); status('El día cambió. Esta página ya cerró; tu texto permanece visible.',true); $('#reloadToday').hidden=false; }
+    async function checkDay() { const day=await api('/api/day'); if(state.today&&state.today!==day.date) {setExpired();return false;} return true; }
+    async function loadToday() {
+      state.ready=false; controls(); $('#retryToday').hidden=true;
       try {
-        const [moodList, version] = await Promise.all([api('/api/moods'), api('/api/version')]);
-        state.version = version.version.toLowerCase(); fillMoodSelects(moodList);
-        $('#versionLabel').textContent = `${version.version} · ${version.color}`;
-        const v2 = state.version === 'v2'; $('#filterWrap').hidden = !v2; $('#wordCount').hidden = !v2;
-      } catch (error) { setStatus('No pudimos conectar con el diario. Reintentá en unos segundos.', true); }
-      await loadEntries(); updateWordCount();
+        const day=await api('/api/day'); let entry=null;
+        try { entry=await api(`/api/entries/by-date/${day.date}`); } catch(error) { if(error.status!==404) throw error; }
+        state.today=day.date; state.id=entry?.id||null; state.dirty=false; state.expired=false; state.ready=true;
+        $('#todayDate').textContent=dateLabel(day.date); $('#todayDate').dateTime=day.date;
+        $('#content').value=entry?.content||''; chooseMood(entry?.mood||null); countWords(); $('#reloadToday').hidden=true;
+        status(entry?'Tu página de hoy está guardada. Podés seguir escribiendo.':'');
+      } catch(error) { status(error.message,true); $('#retryToday').hidden=false; }
+      controls();
     }
-
-    $('#entryForm').addEventListener('submit', async (event) => {
-      event.preventDefault(); setLoading(true); setStatus();
-      const payload = { entry_date: $('#entryDate').value, mood: $('#mood').value, content: $('#content').value };
+    function switchTab(name) {
+      const write=name==='write'; $('#writePanel').hidden=!write; $('#logsPanel').hidden=write;
+      for(const [id,active] of [['writeTab',write],['logsTab',!write]]) { $("#"+id).setAttribute('aria-selected',String(active)); $("#"+id).tabIndex=active?0:-1; }
+      $('#footnote').textContent=write?'Podés volver a editar hoy. Mañana, esta página será un recuerdo.':'Los días sin escribir también están bien. No hace falta completarlos.';
+      if(!write) { $('#reader').hidden=true; $('#logList').hidden=false; loadLogs(); }
+      else if(state.ready&&!state.expired) checkDay().catch(()=>{});
+    }
+    function moodLabel(mood) {
+      const option=moodOptions[mood]; const label=document.createElement('span'); label.className='mood-label';
+      const dot=document.createElement('span'); dot.className='dot'; dot.style.setProperty('--tone',option?.color||'#777');
+      label.append(dot,document.createTextNode(option?.label||mood)); return label;
+    }
+    function readEntry(entry) {
+      $('#logList').hidden=true; $('#reader').hidden=false; $('#readDate').textContent=longDate(entry.entry_date);
+      $('#readMood').replaceChildren(moodLabel(entry.mood)); $('#readContent').textContent=entry.content;
+      $('#readNote').textContent=entry.entry_date===state.today?'Esta es tu página de hoy. Para cambiarla, volvé a Escribir.':'Página cerrada · Este recuerdo es solo de lectura.';
+      $('#backToLogs').focus();
+    }
+    function renderLogs() {
+      const timeline=$('#timeline'); timeline.replaceChildren();
+      if(!state.items.length) { const empty=document.createElement('div'); empty.className='empty'; const title=document.createElement('strong'); title.textContent='Una historia por empezar.'; empty.append(title,document.createTextNode($('#moodFilter').value?'No hay páginas con ese ánimo.':'Lo que escribas hoy va a aparecer acá.')); timeline.append(empty); }
+      for(const entry of state.items) {
+        const card=document.createElement('button'); card.type='button'; card.className='entry-card';
+        const top=document.createElement('div'); top.className='entry-top'; const date=document.createElement('span'); date.className='entry-date'; date.textContent=longDate(entry.entry_date); top.append(date,moodLabel(entry.mood));
+        const preview=document.createElement('p'); preview.className='entry-preview'; preview.textContent=entry.content;
+        const hint=document.createElement('span'); hint.className='read-hint'; hint.textContent='Leer página ↗'; card.append(top,preview,hint); card.addEventListener('click',()=>readEntry(entry)); timeline.append(card);
+      }
+      $('#pageInfo').textContent=`${Math.floor(state.offset/state.limit)+1} / ${Math.max(1,Math.ceil(state.total/state.limit))}`;
+      $('#prevButton').disabled=state.offset===0; $('#nextButton').disabled=state.offset+state.limit>=state.total;
+    }
+    async function loadLogs() {
+      const request=++state.request; const params=new URLSearchParams({limit:state.limit,offset:state.offset}); if($('#moodFilter').value) params.set('mood',$('#moodFilter').value);
+      $('#timeline').textContent='Abriendo tus páginas…'; $('#prevButton').disabled=true; $('#nextButton').disabled=true;
+      try { const data=await api(`/api/entries?${params}`); if(request!==state.request)return; state.items=data.items; state.total=data.total; renderLogs(); }
+      catch(error) { if(request!==state.request)return; $('#timeline').textContent=error.message; const retry=document.createElement('button'); retry.type='button'; retry.className='button quiet'; retry.textContent='Reintentar'; retry.addEventListener('click',loadLogs); $('#timeline').append(retry); }
+    }
+    $('#entryForm').addEventListener('submit',async event=>{
+      event.preventDefault(); if(!state.ready||state.expired||state.saving)return;
+      if(!state.mood) { status('Elegí cómo te sentís antes de guardar.',true); $('.mood').focus(); return; }
+      if(!$('#content').value.trim()) { status('Escribí unas palabras para guardar tu día.',true); $('#content').focus(); return; }
+      state.saving=true; controls(); $('#retryToday').hidden=true;
       try {
-        const path = state.editingId ? `/api/entries/${state.editingId}` : '/api/entries';
-        const method = state.editingId ? 'PUT' : 'POST';
-        const saved = await api(path, { method, body: JSON.stringify(payload) });
-        state.editingId = saved.id; state.dirty = false; $('#deleteButton').hidden = false;
-        setStatus('Tu día quedó guardado.'); await loadEntries(); editEntry(saved); setStatus('Tu día quedó guardado.');
-      } catch (error) { setStatus(error.message, true); } finally { setLoading(false); }
+        if(!await checkDay())return;
+        const saved=await api(state.id?`/api/entries/${state.id}`:'/api/entries',{method:state.id?'PUT':'POST',headers:{'X-Journal-Day':state.today},body:JSON.stringify({content:$('#content').value,mood:state.mood})});
+        state.id=saved.id; state.dirty=false; status('Listo. Un pequeño pedacito de hoy, guardado.');
+      } catch(error) { status(error.message,true); if(error.status===403||error.status===412) setExpired(); if(error.status===409) { status('Hoy ya tiene una página, quizá guardada en otra pestaña. Copiá tu borrador antes de recargar.',true); $('#retryToday').hidden=false; } }
+      finally { state.saving=false; controls(); }
     });
-    $('#newButton').addEventListener('click', () => resetForm());
-    $('#deleteButton').addEventListener('click', async () => {
-      if (!state.editingId || !confirm('¿Querés eliminar esta página? Esta acción no se puede deshacer.')) return;
-      try { await api(`/api/entries/${state.editingId}`, { method: 'DELETE' }); resetForm(); setStatus('La página fue eliminada.'); await loadEntries(); }
-      catch (error) { setStatus(error.message, true); }
-    });
-    $('#content').addEventListener('input', () => { state.dirty = true; updateWordCount(); });
-    $('#entryDate').addEventListener('change', () => { state.dirty = true; });
-    $('#mood').addEventListener('change', () => { state.dirty = true; });
-    $('#moodFilter').addEventListener('change', () => { state.offset = 0; loadEntries(); });
-    $('#prevButton').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); loadEntries(); });
-    $('#nextButton').addEventListener('click', () => { state.offset += state.limit; loadEntries(); });
-    window.addEventListener('beforeunload', (event) => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
-    initialize();
+    $('#content').addEventListener('input',()=>{state.dirty=true;countWords();});
+    $('#writeTab').addEventListener('click',()=>switchTab('write')); $('#logsTab').addEventListener('click',()=>switchTab('logs'));
+    document.querySelector('.tabs').addEventListener('keydown',event=>{ if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {event.preventDefault(); const write=event.key==='Home'||(event.key!=='End'&&$('#logsTab').getAttribute('aria-selected')==='true'); switchTab(write?'write':'logs'); $(write?'#writeTab':'#logsTab').focus();} });
+    $('#backToLogs').addEventListener('click',()=>{$('#reader').hidden=true;$('#logList').hidden=false;});
+    $('#moodFilter').addEventListener('change',()=>{state.offset=0;loadLogs();});
+    $('#prevButton').addEventListener('click',()=>{state.offset=Math.max(0,state.offset-state.limit);loadLogs();});
+    $('#nextButton').addEventListener('click',()=>{state.offset+=state.limit;loadLogs();});
+    async function reload() { if(state.dirty&&!confirm('Tu borrador no guardado se va a descartar. ¿Querés abrir la página de hoy?'))return; await loadToday(); }
+    $('#reloadToday').addEventListener('click',reload); $('#retryToday').addEventListener('click',reload);
+    window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});
+    window.addEventListener('focus',()=>{if(state.ready&&!state.expired)checkDay().catch(()=>{});});
+    setInterval(()=>{if(state.ready&&!state.expired)checkDay().catch(()=>{});},60000);
+    for(const [value,option] of Object.entries(moodOptions)) {
+      const button=document.createElement('button'); button.type='button'; button.className='mood'; button.dataset.mood=value; button.style.setProperty('--tone',option.color); button.setAttribute('aria-pressed','false');
+      const dot=document.createElement('span'); dot.className='dot'; dot.setAttribute('aria-hidden','true'); button.append(dot,document.createTextNode(option.label)); button.addEventListener('click',()=>chooseMood(value,true)); $('#moods').append(button); $('#moodFilter').add(new Option(option.label,value));
+    }
+    api('/api/version').then(version=>{$('#versionLabel').textContent=`${version.version} · ${version.color}`;}).catch(()=>{});
+    loadToday();
   </script>
 </body>
 </html>

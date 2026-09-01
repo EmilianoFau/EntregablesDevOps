@@ -41,8 +41,8 @@ def get_entry_by_date(db: Session, entry_date: date) -> JournalEntry | None:
     return db.scalar(select(JournalEntry).where(JournalEntry.entry_date == entry_date))
 
 
-def create_entry(db: Session, payload: EntryCreate) -> JournalEntry:
-    entry = JournalEntry(**payload.model_dump())
+def create_entry(db: Session, payload: EntryCreate, today: date) -> JournalEntry:
+    entry = JournalEntry(**payload.model_dump(), entry_date=today)
     db.add(entry)
     db.commit()
     db.refresh(entry)
@@ -60,4 +60,3 @@ def update_entry(db: Session, entry: JournalEntry, payload: EntryUpdate) -> Jour
 def delete_entry(db: Session, entry: JournalEntry) -> None:
     db.delete(entry)
     db.commit()
-

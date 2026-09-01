@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://journal:journal_dev_password@localhost:5432/journal"
     app_version: str = "v2"
     deployment_color: str = "local"
+    journal_timezone: str = "America/Montevideo"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -14,4 +15,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

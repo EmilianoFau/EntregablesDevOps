@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:"
 
@@ -10,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
+from app.clock import journal_today
 
 
 @pytest.fixture()
@@ -27,8 +29,8 @@ def client() -> TestClient:
             yield session
 
     app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[journal_today] = lambda: date(2026, 9, 1)
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
     Base.metadata.drop_all(engine)
-

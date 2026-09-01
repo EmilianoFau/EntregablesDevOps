@@ -1,14 +1,18 @@
 # Somos Los Bandidos©
+
 ## El Último Renglón
 
-Diario personal de estética vintage y relajante, desarrollado con FastAPI, PostgreSQL y un frontend completo en un único archivo HTML/CSS/JS.
+Diario personal minimalista: una hoja blanca, tipografía editorial y pequeños acentos vivos. Desarrollado con FastAPI, PostgreSQL y un frontend completo en un único archivo HTML/CSS/JS.
 
 ## Funcionalidades
 
-- Crear una entrada por día con texto, fecha y estado de ánimo.
-- Editar y eliminar entradas.
-- Recorrer el diario en orden cronológico.
-- Filtrar por estado de ánimo y ver el contador de palabras en v2.
+- Dos pestañas: Escribir y Mis logs.
+- Crear y editar únicamente la entrada de hoy, con texto libre y estado de ánimo.
+- Fecha automática del servidor en America/Montevideo, mostrada como DD/MM/AAAA. No se acepta una fecha elegida por el cliente.
+- Las entradas de otros días son solo lectura: la API rechaza su modificación y eliminación.
+- Los días sin entradas se omiten; no se pueden completar retroactivamente.
+- Consultar y filtrar los logs, abrir su contenido completo y contar palabras al escribir.
+- Si cambia el día con el editor abierto, el borrador queda visible pero bloqueado hasta abrir la página nueva.
 - Ejecutar dos versiones en paralelo con despliegue blue/green.
 
 ## Levantar con Docker
@@ -50,6 +54,18 @@ docker build --target test -t journal:test .
 docker run --rm journal:test
 ```
 
+Las pruebas cubren CRUD de hoy, validaciones, fechas no seleccionables, bloqueo del pasado, días omitidos y cambio de día.
+
+## Datos de ejemplo
+
+```bash
+docker compose exec app python -m app.seed_demo
+```
+
+Carga dos entradas ficticias, de ayer y de hace tres días. Es una operación explícita, no automática: conserva cualquier entrada existente para esas fechas y puede repetirse sin duplicar datos. No habilita creación retroactiva por API.
+
+La variable `JOURNAL_TIMEZONE` define la zona horaria del diario (por defecto `America/Montevideo`).
+
 ## Arquitectura
 
 ```text
@@ -67,16 +83,17 @@ Navegador -> FastAPI (API + index.html) -> PostgreSQL
 - `GET/POST /api/entries`
 - `GET/PUT/DELETE /api/entries/{id}`
 - `GET /api/moods`
+- `GET /api/day`
 - `GET /api/version`
 - `GET /health/live`
 - `GET /health/ready`
 
 ## Versiones blue/green
 
-- `v1` (blue): editor, CRUD y cronología.
-- `v2` (green): agrega filtro por ánimo y contador de palabras.
+- `v1` (blue): versión vintage inicial conservada en el commit `4e3e73e`.
+- `v2` (green): hoja blanca minimalista, pestañas y escritura limitada al día actual.
 
-El mismo código se configura mediante `APP_VERSION`. Kubernetes mantiene ambos deployments activos y el `Service` selecciona cuál recibe tráfico. Las instrucciones reproducibles están en [`k8s/README.md`](k8s/README.md).
+Las imágenes se construyen desde cada versión del código; `APP_VERSION` solo identifica la versión mostrada. Kubernetes mantiene ambos deployments activos y el `Service` selecciona cuál recibe tráfico. Ambas versiones comparten esquema de datos. El rollback a v1 también recupera sus reglas de edición anteriores. Las instrucciones reproducibles están en [`k8s/README.md`](k8s/README.md).
 
 ## Datos y privacidad
 

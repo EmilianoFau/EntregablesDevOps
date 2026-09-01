@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import date
 
 from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
@@ -6,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.clock import journal_today
 from app.database import get_db
 from app.models import Mood
 from app.routes.entries import router as entries_router
@@ -19,6 +21,11 @@ app = FastAPI(
 app.include_router(entries_router)
 
 INDEX_FILE = Path(__file__).parent / "static" / "index.html"
+
+
+@app.get("/api/day", tags=["metadata"])
+def current_day(today: date = Depends(journal_today)) -> dict[str, str]:
+    return {"date": today.isoformat(), "timezone": get_settings().journal_timezone}
 
 
 @app.get("/api/moods", response_model=list[str], tags=["metadata"])
@@ -46,4 +53,3 @@ def ready(db: Session = Depends(get_db)) -> dict[str, str]:
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
     return FileResponse(INDEX_FILE)
-

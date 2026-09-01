@@ -34,6 +34,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://journal:journal_dev_password@db:5432/journal}
       APP_VERSION: ${APP_VERSION:-v2}
       DEPLOYMENT_COLOR: ${DEPLOYMENT_COLOR:-local}
+      JOURNAL_TIMEZONE: ${JOURNAL_TIMEZONE:-America/Montevideo}
     ports:
       - "8000:8000"
     depends_on:

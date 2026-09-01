@@ -5,8 +5,8 @@ Construir y cargar las dos versiones:
 ```bash
 minikube start
 eval $(minikube docker-env)
-docker build -t journal:v1 .
-docker build --build-arg VERSION=v2 -t journal:v2 .
+git archive 4e3e73e | docker build --target runtime -t journal:v1 -
+docker build --target runtime -t journal:v2 .
 ```
 
 Crear la infraestructura y ejecutar la migración:
@@ -44,4 +44,3 @@ curl http://localhost:8080/api/version
 ```
 
 Antes de una entrega real, reemplazar los valores de ejemplo de `k8s/config.yaml` por secretos administrados fuera de Git.
-
