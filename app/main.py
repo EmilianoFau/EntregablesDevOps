@@ -12,7 +12,7 @@ from app.schemas import Mood, VersionInfo
 app = FastAPI(
     title="El Último Renglón",
     description="Un diario personal para cerrar el día con calma.",
-    version="1.0.0",
+    version="2.0.0",
 )
 app.include_router(entries_router)
 

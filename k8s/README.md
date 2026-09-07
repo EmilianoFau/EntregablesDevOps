@@ -1,38 +1,71 @@
-# V1 en Kubernetes
+# Blue/green en Minikube
 
-En esta etapa Kubernetes ejecuta una sola versión de la aplicación. Hay únicamente dos archivos:
+El ejemplo usa solamente dos manifiestos:
 
-- `config.yaml`: guarda la configuración que recibe el contenedor.
-- `app.yaml`: crea un Deployment con un pod de `journal:v1` y un Service para acceder a él.
+- `config.yaml`: configuración compartida por las dos versiones.
+- `blue-green.yaml`: dos Deployments y el Service que permite elegir uno.
 
-## Ejecutar en Minikube
+```text
+                         -> Deployment blue  -> journal:v1
+Navegador -> Service ---|
+                         -> Deployment green -> journal:v2
+```
+
+Los dos Deployments están encendidos. El selector del Service determina cuál recibe las visitas.
+
+## 1. Construir las dos versiones
+
+La V1 está guardada en el tag Git `v1`. Desde la raíz del proyecto:
 
 ```bash
 minikube start
-eval $(minikube docker-env)
+
+git switch --detach v1
 docker build --target runtime -t journal:v1 .
+
+git switch --detach v2
+docker build --target runtime -t journal:v2 .
+
+git switch main
+minikube image load journal:v1
+minikube image load journal:v2
+```
+
+## 2. Crear las piezas
+
+```bash
 kubectl apply -f k8s/config.yaml
-kubectl apply -f k8s/app.yaml
-kubectl rollout status deployment/journal-v1
+kubectl apply -f k8s/blue-green.yaml
+kubectl rollout status deployment/journal-blue
+kubectl rollout status deployment/journal-green
 minikube service journal
 ```
 
-Para ver las piezas creadas:
+El Service comienza apuntando a blue. Se verá la V1 azul.
+
+## 3. Pasar de V1 a V2
 
 ```bash
-kubectl get configmap,deployment,pod,service
+kubectl patch service journal -p '{"spec":{"selector":{"app":"journal","color":"green"}}}'
 ```
 
-El recorrido es:
+Al refrescar la página se verá la V2 coral y su pregunta del día. No se reconstruyó ningún contenedor: solamente se cambió el destino del Service.
 
-```text
-Navegador -> Service journal -> Deployment journal-v1 -> Pod -> FastAPI -> JSON
+## 4. Volver a V1
+
+```bash
+kubectl patch service journal -p '{"spec":{"selector":{"app":"journal","color":"blue"}}}'
 ```
 
-El Deployment crea y mantiene el pod. El Service le da un punto de acceso estable. El ConfigMap entrega variables de configuración al contenedor.
+Este regreso inmediato es el rollback de la estrategia blue/green.
+
+## Ver qué está ocurriendo
+
+```bash
+kubectl get deployments,pods,service
+kubectl get service journal -o jsonpath='{.spec.selector.color}'
+```
 
 ## Limitación conocida
 
-El archivo JSON está dentro del contenedor. Si Kubernetes reemplaza el pod, vuelve a la copia incluida en la imagen y se pierden las entradas creadas durante esa ejecución. Es una decisión intencional para mantener esta primera versión fácil de entender; no es una solución de persistencia para producción.
-
-Blue/green se agregará después de construir una V2 visible. En ese momento habrá dos Deployments y el Service elegirá cuál recibe el tráfico.
+Cada pod guarda sus cambios en su propio archivo JSON. Ambos comienzan con los mismos datos de prueba, pero una entrada creada en blue no aparece en green. Es una simplificación consciente para esta entrega; una aplicación real usaría almacenamiento compartido.

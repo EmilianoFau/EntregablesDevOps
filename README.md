@@ -12,6 +12,7 @@ Diario personal minimalista desarrollado con FastAPI, almacenamiento JSON y un f
 - Las entradas de otros días son solo lectura: la API rechaza su modificación y eliminación.
 - Los días sin entradas se omiten; no se pueden completar retroactivamente.
 - Consultar y filtrar los logs, abrir su contenido completo y contar palabras al escribir.
+- Mostrar una pregunta de reflexión distinta cada día en la V2.
 - Si cambia el día con el editor abierto, el borrador queda visible pero bloqueado hasta abrir la página nueva.
 - Guardar las entradas en `data/entries.json`.
 
@@ -74,7 +75,7 @@ Navegador -> FastAPI (API + index.html) -> data/entries.json
 - `app/routes`: API REST.
 - `data/entries.json`: almacenamiento y datos de ejemplo.
 - `tests`: pruebas funcionales de la API.
-- `k8s`: un Deployment, un Service y un ConfigMap para ejecutar la v1 en Minikube.
+- `k8s`: dos Deployments, un Service y un ConfigMap para demostrar blue/green en Minikube.
 
 ## Endpoints principales
 
@@ -88,11 +89,11 @@ Navegador -> FastAPI (API + index.html) -> data/entries.json
 
 ## Estado del versionado
 
-- La versión actual será la base de `journal:v1`.
-- Blue/green todavía no está configurado en esta etapa.
-- El próximo paso será guardar esta v1, desarrollar un cambio visible para v2 y recién entonces crear los dos Deployments.
+- `v1`: interfaz azul original, guardada en el tag Git `v1` y en la imagen `journal:v1`.
+- `v2`: interfaz coral con una pregunta diaria, guardada en la imagen `journal:v2`.
+- Blue ejecuta V1 y green ejecuta V2. El Service decide cuál de las dos recibe las visitas.
 
-Las instrucciones de la v1 están en [`k8s/README.md`](k8s/README.md).
+Las instrucciones completas para construir, desplegar y alternar versiones están en [`k8s/README.md`](k8s/README.md).
 
 ## Datos y privacidad
 

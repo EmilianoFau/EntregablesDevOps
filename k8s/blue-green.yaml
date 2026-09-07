@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: journal
+      color: blue
+  template:
+    metadata:
+      labels:
+        app: journal
+        color: blue
+        version: v1
+    spec:
+      containers:
+        - name: journal
+          image: journal:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: journal-config
+          env:
+            - name: APP_VERSION
+              value: v1
+            - name: DEPLOYMENT_COLOR
+              value: blue
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: journal
+      color: green
+  template:
+    metadata:
+      labels:
+        app: journal
+        color: green
+        version: v2
+    spec:
+      containers:
+        - name: journal
+          image: journal:v2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: journal-config
+          env:
+            - name: APP_VERSION
+              value: v2
+            - name: DEPLOYMENT_COLOR
+              value: green
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: journal
+spec:
+  selector:
+    app: journal
+    color: blue
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort

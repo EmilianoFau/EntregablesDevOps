@@ -4,6 +4,4 @@ metadata:
   name: journal-config
 data:
   DATA_FILE: /app/data/entries.json
-  APP_VERSION: v1
-  DEPLOYMENT_COLOR: standalone
   JOURNAL_TIMEZONE: America/Montevideo

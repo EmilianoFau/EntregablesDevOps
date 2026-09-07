@@ -5,7 +5,7 @@ services:
       target: runtime
     environment:
       DATA_FILE: /app/data/entries.json
-      APP_VERSION: v1
+      APP_VERSION: v2
       DEPLOYMENT_COLOR: standalone
       JOURNAL_TIMEZONE: America/Montevideo
     ports:

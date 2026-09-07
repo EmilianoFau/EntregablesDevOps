@@ -58,6 +58,7 @@ def test_health_and_metadata(client: TestClient) -> None:
     assert client.get("/health/ready").json() == {"status": "ready"}
     assert "SERENO" in client.get("/api/moods").json()
     assert client.get("/api/day").json()["date"] == "2026-09-01"
+    assert client.get("/api/version").json()["version"] == "v2"
 
 
 def test_cannot_choose_a_date(client: TestClient) -> None:
