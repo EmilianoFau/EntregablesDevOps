@@ -2,14 +2,10 @@ import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
-from app import repository
 from app.clock import journal_today
-from app.database import get_db
-from app.models import Mood
-from app.schemas import EntryCreate, EntryList, EntryRead, EntryUpdate
+from app.repository import JsonJournalRepository, get_repository
+from app.schemas import EntryCreate, EntryList, EntryRead, EntryUpdate, Mood
 
 router = APIRouter(prefix="/api/entries", tags=["entries"])
 
@@ -30,62 +26,74 @@ def list_entries(
     mood: Mood | None = None,
     from_date: date | None = None,
     to_date: date | None = None,
-    db: Session = Depends(get_db),
+    repository: JsonJournalRepository = Depends(get_repository),
 ) -> EntryList:
-    items, total = repository.list_entries(
-        db, limit=limit, offset=offset, mood=mood, from_date=from_date, to_date=to_date
+    items, total = repository.list(
+        limit=limit, offset=offset, mood=mood, from_date=from_date, to_date=to_date
     )
     return EntryList(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("/by-date/{entry_date}", response_model=EntryRead)
-def get_entry_by_date(entry_date: date, db: Session = Depends(get_db)) -> EntryRead:
-    entry = repository.get_entry_by_date(db, entry_date)
-    if not entry:
+def get_entry_by_date(
+    entry_date: date, repository: JsonJournalRepository = Depends(get_repository)
+) -> EntryRead:
+    entry = repository.get_by_date(entry_date)
+    if entry is None:
         raise HTTPException(status_code=404, detail="No hay una entrada para esa fecha")
     return entry
 
 
 @router.get("/{entry_id}", response_model=EntryRead)
-def get_entry(entry_id: uuid.UUID, db: Session = Depends(get_db)) -> EntryRead:
-    entry = repository.get_entry(db, entry_id)
-    if not entry:
+def get_entry(
+    entry_id: uuid.UUID, repository: JsonJournalRepository = Depends(get_repository)
+) -> EntryRead:
+    entry = repository.get(entry_id)
+    if entry is None:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
     return entry
 
 
 @router.post("", response_model=EntryRead, status_code=status.HTTP_201_CREATED)
 def create_entry(
-    payload: EntryCreate, db: Session = Depends(get_db), today: date = Depends(writable_day)
+    payload: EntryCreate,
+    today: date = Depends(writable_day),
+    repository: JsonJournalRepository = Depends(get_repository),
 ) -> EntryRead:
     try:
-        return repository.create_entry(db, payload, today)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=409, detail="Ya existe una entrada para esta fecha")
+        return repository.create(payload, today)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
 
 
 @router.put("/{entry_id}", response_model=EntryRead)
 def update_entry(
-    entry_id: uuid.UUID, payload: EntryUpdate, db: Session = Depends(get_db),
+    entry_id: uuid.UUID,
+    payload: EntryUpdate,
     today: date = Depends(writable_day),
+    repository: JsonJournalRepository = Depends(get_repository),
 ) -> EntryRead:
-    entry = repository.get_entry(db, entry_id)
-    if not entry:
+    entry = repository.get(entry_id)
+    if entry is None:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
     if entry.entry_date != today:
         raise HTTPException(status_code=403, detail="Las páginas de otros días son solo de lectura")
-    return repository.update_entry(db, entry, payload)
+    updated = repository.update(entry_id, payload)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    return updated
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_entry(
-    entry_id: uuid.UUID, db: Session = Depends(get_db), today: date = Depends(journal_today)
+    entry_id: uuid.UUID,
+    today: date = Depends(journal_today),
+    repository: JsonJournalRepository = Depends(get_repository),
 ) -> Response:
-    entry = repository.get_entry(db, entry_id)
-    if not entry:
+    entry = repository.get(entry_id)
+    if entry is None:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
     if entry.entry_date != today:
         raise HTTPException(status_code=403, detail="Las páginas de otros días son solo de lectura")
-    repository.delete_entry(db, entry)
+    repository.delete(entry_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

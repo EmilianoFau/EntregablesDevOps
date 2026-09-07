@@ -1,0 +1,18 @@
+[
+  {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "entry_date": "2026-09-05",
+    "content": "Salí a caminar sin apuro y encontré un café nuevo. Me senté junto a la ventana y dejé el teléfono en el bolsillo.",
+    "mood": "AGRADECIDO",
+    "created_at": "2026-09-05T22:00:00Z",
+    "updated_at": "2026-09-05T22:00:00Z"
+  },
+  {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "entry_date": "2026-09-03",
+    "content": "Cocinamos algo rico con amigos. La receta no salió perfecta, pero nos reímos tanto que dio lo mismo.",
+    "mood": "FELIZ",
+    "created_at": "2026-09-03T23:10:00Z",
+    "updated_at": "2026-09-03T23:10:00Z"
+  }
+]

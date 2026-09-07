@@ -2,7 +2,7 @@
 
 ## El Último Renglón
 
-Diario personal minimalista: una hoja blanca, tipografía editorial y pequeños acentos vivos. Desarrollado con FastAPI, PostgreSQL y un frontend completo en un único archivo HTML/CSS/JS.
+Diario personal minimalista desarrollado con FastAPI, almacenamiento JSON y un frontend completo en un único archivo HTML/CSS/JS.
 
 ## Funcionalidades
 
@@ -13,7 +13,7 @@ Diario personal minimalista: una hoja blanca, tipografía editorial y pequeños 
 - Los días sin entradas se omiten; no se pueden completar retroactivamente.
 - Consultar y filtrar los logs, abrir su contenido completo y contar palabras al escribir.
 - Si cambia el día con el editor abierto, el borrador queda visible pero bloqueado hasta abrir la página nueva.
-- Ejecutar dos versiones en paralelo con despliegue blue/green.
+- Guardar las entradas en `data/entries.json`.
 
 ## Levantar con Docker
 
@@ -30,12 +30,6 @@ Para detener el entorno:
 
 ```bash
 docker compose down
-```
-
-Para eliminar también los datos locales:
-
-```bash
-docker compose down -v
 ```
 
 ## Desarrollo y pruebas
@@ -56,27 +50,31 @@ docker run --rm journal:test
 
 Las pruebas cubren CRUD de hoy, validaciones, fechas no seleccionables, bloqueo del pasado, días omitidos y cambio de día.
 
-## Datos de ejemplo
+## Datos
+
+El repositorio incluye dos entradas ficticias en `data/entries.json`. Para volver a agregar ejemplos relativos al día actual si esas fechas están libres:
 
 ```bash
 docker compose exec app python -m app.seed_demo
 ```
 
-Carga dos entradas ficticias, de ayer y de hace tres días. Es una operación explícita, no automática: conserva cualquier entrada existente para esas fechas y puede repetirse sin duplicar datos. No habilita creación retroactiva por API.
+Carga entradas de ayer y de hace tres días. Conserva cualquier entrada existente y puede repetirse sin duplicarlas.
+
+El JSON vive dentro del contenedor. Sus cambios sobreviven a un reinicio del mismo contenedor, pero se pierden al eliminarlo o reconstruirlo. Esta limitación mantiene la v1 simple y se evaluará nuevamente al preparar blue/green.
 
 La variable `JOURNAL_TIMEZONE` define la zona horaria del diario (por defecto `America/Montevideo`).
 
 ## Arquitectura
 
 ```text
-Navegador -> FastAPI (API + index.html) -> PostgreSQL
+Navegador -> FastAPI (API + index.html) -> data/entries.json
 ```
 
 - `app/static/index.html`: frontend completo sin framework ni compilación.
 - `app/routes`: API REST.
-- `alembic`: migraciones de base de datos.
+- `data/entries.json`: almacenamiento y datos de ejemplo.
 - `tests`: pruebas funcionales de la API.
-- `k8s`: PostgreSQL, migración, deployments blue/green y servicio.
+- `k8s`: un Deployment, un Service y un ConfigMap para ejecutar la v1 en Minikube.
 
 ## Endpoints principales
 
@@ -88,12 +86,13 @@ Navegador -> FastAPI (API + index.html) -> PostgreSQL
 - `GET /health/live`
 - `GET /health/ready`
 
-## Versiones blue/green
+## Estado del versionado
 
-- `v1` (blue): versión vintage inicial conservada en el commit `4e3e73e`.
-- `v2` (green): hoja blanca minimalista, pestañas y escritura limitada al día actual.
+- La versión actual será la base de `journal:v1`.
+- Blue/green todavía no está configurado en esta etapa.
+- El próximo paso será guardar esta v1, desarrollar un cambio visible para v2 y recién entonces crear los dos Deployments.
 
-Las imágenes se construyen desde cada versión del código; `APP_VERSION` solo identifica la versión mostrada. Kubernetes mantiene ambos deployments activos y el `Service` selecciona cuál recibe tráfico. Ambas versiones comparten esquema de datos. El rollback a v1 también recupera sus reglas de edición anteriores. Las instrucciones reproducibles están en [`k8s/README.md`](k8s/README.md).
+Las instrucciones de la v1 están en [`k8s/README.md`](k8s/README.md).
 
 ## Datos y privacidad
 

@@ -4,9 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+psycopg://journal:journal_dev_password@localhost:5432/journal"
-    app_version: str = "v2"
-    deployment_color: str = "local"
+    data_file: str = "/app/data/entries.json"
+    app_version: str = "v1"
+    deployment_color: str = "standalone"
     journal_timezone: str = "America/Montevideo"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

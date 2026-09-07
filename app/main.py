@@ -3,20 +3,16 @@ from datetime import date
 
 from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-
 from app.config import get_settings
 from app.clock import journal_today
-from app.database import get_db
-from app.models import Mood
+from app.repository import JsonJournalRepository, get_repository
 from app.routes.entries import router as entries_router
-from app.schemas import VersionInfo
+from app.schemas import Mood, VersionInfo
 
 app = FastAPI(
     title="El Último Renglón",
     description="Un diario personal para cerrar el día con calma.",
-    version="2.0.0",
+    version="1.0.0",
 )
 app.include_router(entries_router)
 
@@ -45,8 +41,9 @@ def live() -> dict[str, str]:
 
 
 @app.get("/health/ready", tags=["health"])
-def ready(db: Session = Depends(get_db)) -> dict[str, str]:
-    db.execute(text("SELECT 1"))
+def ready(repository: JsonJournalRepository = Depends(get_repository)) -> dict[str, str]:
+    if not repository.ready():
+        raise RuntimeError("El archivo de datos no está disponible")
     return {"status": "ready"}
 
 

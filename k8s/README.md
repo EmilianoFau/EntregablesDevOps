@@ -1,46 +1,38 @@
-# Despliegue en Minikube
+# V1 en Kubernetes
 
-Construir y cargar las dos versiones:
+En esta etapa Kubernetes ejecuta una sola versión de la aplicación. Hay únicamente dos archivos:
+
+- `config.yaml`: guarda la configuración que recibe el contenedor.
+- `app.yaml`: crea un Deployment con un pod de `journal:v1` y un Service para acceder a él.
+
+## Ejecutar en Minikube
 
 ```bash
 minikube start
 eval $(minikube docker-env)
-git archive 4e3e73e | docker build --target runtime -t journal:v1 -
-docker build --target runtime -t journal:v2 .
-```
-
-Crear la infraestructura y ejecutar la migración:
-
-```bash
-kubectl apply -f k8s/namespace.yaml
+docker build --target runtime -t journal:v1 .
 kubectl apply -f k8s/config.yaml
-kubectl apply -f k8s/postgres.yaml
-kubectl -n journal rollout status statefulset/postgres
-kubectl apply -f k8s/migration-job.yaml
-kubectl -n journal wait --for=condition=complete job/journal-migrate --timeout=120s
-kubectl apply -f k8s/app-blue-green.yaml
-kubectl -n journal rollout status deployment/journal-blue
-kubectl -n journal rollout status deployment/journal-green
-minikube service journal -n journal
+kubectl apply -f k8s/app.yaml
+kubectl rollout status deployment/journal-v1
+minikube service journal
 ```
 
-El servicio comienza apuntando a blue/v1. Para pasar a green/v2:
+Para ver las piezas creadas:
 
 ```bash
-kubectl -n journal patch service journal -p '{"spec":{"selector":{"app":"journal","color":"green"}}}'
+kubectl get configmap,deployment,pod,service
 ```
 
-Rollback inmediato:
+El recorrido es:
 
-```bash
-kubectl -n journal patch service journal -p '{"spec":{"selector":{"app":"journal","color":"blue"}}}'
+```text
+Navegador -> Service journal -> Deployment journal-v1 -> Pod -> FastAPI -> JSON
 ```
 
-Verificar la versión activa:
+El Deployment crea y mantiene el pod. El Service le da un punto de acceso estable. El ConfigMap entrega variables de configuración al contenedor.
 
-```bash
-kubectl -n journal port-forward service/journal 8080:80
-curl http://localhost:8080/api/version
-```
+## Limitación conocida
 
-Antes de una entrega real, reemplazar los valores de ejemplo de `k8s/config.yaml` por secretos administrados fuera de Git.
+El archivo JSON está dentro del contenedor. Si Kubernetes reemplaza el pod, vuelve a la copia incluida en la imagen y se pierden las entradas creadas durante esa ejecución. Es una decisión intencional para mantener esta primera versión fácil de entender; no es una solución de persistencia para producción.
+
+Blue/green se agregará después de construir una V2 visible. En ese momento habrá dos Deployments y el Service elegirá cuál recibe el tráfico.

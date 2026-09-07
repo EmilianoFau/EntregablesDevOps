@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: journal
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: journal
+        version: v1
+    spec:
+      containers:
+        - name: journal
+          image: journal:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: journal-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: journal
+spec:
+  selector:
+    app: journal
+    version: v1
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort

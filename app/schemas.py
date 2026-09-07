@@ -1,9 +1,18 @@
 import uuid
+import enum
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models import Mood
+
+class Mood(str, enum.Enum):
+    SERENO = "SERENO"
+    FELIZ = "FELIZ"
+    AGRADECIDO = "AGRADECIDO"
+    CANSADO = "CANSADO"
+    TRISTE = "TRISTE"
+    ANSIOSO = "ANSIOSO"
+    REFLEXIVO = "REFLEXIVO"
 
 
 class EntryPayload(BaseModel):
@@ -20,6 +29,7 @@ class EntryPayload(BaseModel):
             raise ValueError("El texto no puede estar vacío")
         return value
 
+
 class EntryCreate(EntryPayload):
     pass
 
@@ -34,7 +44,7 @@ class EntryRead(EntryPayload):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
 
 
 class EntryList(BaseModel):
