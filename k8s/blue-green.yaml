@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: journal-blue
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: journal
@@ -35,7 +35,7 @@ kind: Deployment
 metadata:
   name: journal-green
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: journal
