@@ -93,3 +93,9 @@ def test_midnight_precondition_preserves_draft(client: TestClient) -> None:
 def test_update_cannot_change_date(client: TestClient) -> None:
     entry_id = client.post("/api/entries", json=ENTRY).json()["id"]
     assert client.put(f"/api/entries/{entry_id}", json={**ENTRY, "entry_date": "2026-08-31"}).status_code == 422
+
+
+def test_metrics_count_operations(client: TestClient) -> None:
+    assert client.post("/api/entries", json=ENTRY).status_code == 201
+    metrics = client.get("/metrics/").text
+    assert 'journal_entry_operations_total{operation="create"}' in metrics

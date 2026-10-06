@@ -3,6 +3,7 @@ from datetime import date
 
 from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
+from prometheus_client import make_asgi_app
 from app.config import get_settings
 from app.clock import journal_today
 from app.repository import JsonJournalRepository, get_repository
@@ -15,6 +16,7 @@ app = FastAPI(
     version="2.0.0",
 )
 app.include_router(entries_router)
+app.mount("/metrics", make_asgi_app())
 
 INDEX_FILE = Path(__file__).parent / "static" / "index.html"
 

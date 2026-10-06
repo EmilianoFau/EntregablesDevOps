@@ -1,0 +1,232 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: default
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    rule_files:
+      - /etc/prometheus/alerts.yml
+    scrape_configs:
+      - job_name: journal
+        metrics_path: /metrics/
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          # Solo los pods del diario marcados para monitoreo.
+          - source_labels: [__meta_kubernetes_pod_label_app, __meta_kubernetes_pod_label_metrics]
+            regex: journal;enabled
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_label_color]
+            target_label: color
+  alerts.yml: |
+    groups:
+      - name: journal
+        rules:
+          - alert: MuchasOperaciones
+            expr: sum(increase(journal_entry_operations_total[5m])) > 5
+            labels:
+              severity: warning
+            annotations:
+              summary: Más de 5 operaciones de escritura en 5 minutos
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.5.0
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+data:
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        url: http://prometheus:9090
+        isDefault: true
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: journal
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+data:
+  journal.json: |
+    {
+      "title": "El Último Renglón",
+      "uid": "journal",
+      "refresh": "10s",
+      "time": {"from": "now-30m", "to": "now"},
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Operaciones en los últimos 5 minutos",
+          "gridPos": {"x": 0, "y": 0, "w": 16, "h": 9},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {
+              "expr": "sum by (operation) (increase(journal_entry_operations_total[5m]))",
+              "legendFormat": "{{operation}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"thresholdsStyle": {"mode": "line"}},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{"color": "green", "value": null}, {"color": "red", "value": 5}]
+              }
+            }
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Alerta MuchasOperaciones",
+          "gridPos": {"x": 16, "y": 0, "w": 8, "h": 9},
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "targets": [
+            {"expr": "sum(ALERTS{alertname=\"MuchasOperaciones\", alertstate=\"firing\"}) or vector(0)"}
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {"type": "value", "options": {"0": {"text": "OK"}, "1": {"text": "ALERTA"}}}
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]
+              }
+            }
+          }
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:12.1.0
+          ports:
+            - containerPort: 3000
+          env:
+            # Acceso sin login, solo para la demo local.
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: Admin
+          volumeMounts:
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning/datasources/datasource.yaml
+              subPath: datasource.yaml
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
+              subPath: dashboards.yaml
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: provisioning
+          configMap:
+            name: grafana-provisioning
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: NodePort

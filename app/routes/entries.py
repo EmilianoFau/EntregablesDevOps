@@ -2,12 +2,20 @@ import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
+from prometheus_client import Counter
 
 from app.clock import journal_today
 from app.repository import JsonJournalRepository, get_repository
 from app.schemas import EntryCreate, EntryList, EntryRead, EntryUpdate, Mood
 
 router = APIRouter(prefix="/api/entries", tags=["entries"])
+
+OPERATIONS = Counter(
+    "journal_entry_operations", "Operaciones de escritura sobre entradas", ["operation"]
+)
+# Arrancan en 0 para que Prometheus cuente también la primera operación.
+for operation in ("create", "update", "delete"):
+    OPERATIONS.labels(operation)
 
 
 def writable_day(
@@ -61,9 +69,11 @@ def create_entry(
     repository: JsonJournalRepository = Depends(get_repository),
 ) -> EntryRead:
     try:
-        return repository.create(payload, today)
+        created = repository.create(payload, today)
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+    OPERATIONS.labels("create").inc()
+    return created
 
 
 @router.put("/{entry_id}", response_model=EntryRead)
@@ -81,6 +91,7 @@ def update_entry(
     updated = repository.update(entry_id, payload)
     if updated is None:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    OPERATIONS.labels("update").inc()
     return updated
 
 
@@ -96,4 +107,5 @@ def delete_entry(
     if entry.entry_date != today:
         raise HTTPException(status_code=403, detail="Las páginas de otros días son solo de lectura")
     repository.delete(entry_id)
+    OPERATIONS.labels("delete").inc()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

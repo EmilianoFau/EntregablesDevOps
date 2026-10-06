@@ -68,4 +68,47 @@ kubectl get service journal -o jsonpath='{.spec.selector.color}'
 
 ## Limitación conocida
 
-Cada pod guarda sus cambios en su propio archivo JSON. Ambos comienzan con los mismos datos de prueba, pero una entrada creada en blue no aparece en green. Es una simplificación consciente para esta entrega; una aplicación real usaría almacenamiento compartido.
+Cada pod guarda sus cambios en su propio archivo JSON. Por eso cada color corre con una sola réplica: con dos, la misma entrada existiría en un pod y no en el otro. Blue y green comienzan con los mismos datos de prueba, pero una entrada creada en blue no aparece en green. Es una simplificación consciente para esta entrega; una aplicación real usaría almacenamiento compartido.
+
+## Monitoreo y alertas
+
+`monitoring.yaml` agrega Prometheus y Grafana. La app cuenta cada escritura de entradas (crear, editar y borrar) en la métrica `journal_entry_operations_total`, expuesta en `/metrics`.
+
+```text
+Pods green (/metrics) <- Prometheus (regla de alerta) <- Grafana (dashboard)
+```
+
+La alerta `MuchasOperaciones` se dispara si hay **más de 5 operaciones en 5 minutos**. La regla está en el ConfigMap `prometheus-config`.
+
+Solo se monitorea green, porque blue ejecuta la V1 y no tiene métricas. Hay que reconstruir `journal:v2` desde `main` para incluirlas. Se construye dentro de Minikube, porque `minikube image load` no reemplaza una imagen que ya existe con el mismo tag:
+
+```bash
+minikube image build -t journal:v2 --build-opt=target=runtime .
+kubectl apply -f k8s/blue-green.yaml
+kubectl rollout restart deployment/journal-green
+kubectl patch service journal -p '{"spec":{"selector":{"app":"journal","color":"green"}}}'
+
+kubectl apply -f k8s/monitoring.yaml
+kubectl rollout status deployment/prometheus
+kubectl rollout status deployment/grafana
+minikube service prometheus
+minikube service grafana
+```
+
+- Prometheus: en **Status → Targets** aparecen los pods green. En **Alerts** aparece `MuchasOperaciones`.
+- Grafana: el dashboard **El Último Renglón** muestra las operaciones de los últimos 5 minutos y el estado de la alerta.
+
+### Disparar la alerta
+
+Con la entrada de hoy ya creada desde la página:
+
+```bash
+URL=$(minikube service journal --url)
+ID=$(curl -s "$URL/api/entries?limit=1" | python3 -c 'import json,sys; print(json.load(sys.stdin)["items"][0]["id"])')
+for i in $(seq 6); do
+  curl -s -o /dev/null -X PUT "$URL/api/entries/$ID" -H 'Content-Type: application/json' \
+    -d "{\"content\": \"Prueba $i\", \"mood\": \"SERENO\"}"
+done
+```
+
+En menos de un minuto la alerta pasa a **Firing** en Prometheus y el panel de Grafana muestra **ALERTA**. Cuando pasan 5 minutos sin escrituras, vuelve a OK.

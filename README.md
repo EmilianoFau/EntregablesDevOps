@@ -76,6 +76,7 @@ Navegador -> FastAPI (API + index.html) -> data/entries.json
 - `data/entries.json`: almacenamiento y datos de ejemplo.
 - `tests`: pruebas funcionales de la API.
 - `k8s`: dos Deployments, un Service y un ConfigMap para demostrar blue/green en Minikube.
+- `k8s/monitoring.yaml`: Prometheus y Grafana, con una alerta si hay más de 5 escrituras en 5 minutos.
 
 ## Endpoints principales
 
@@ -86,6 +87,7 @@ Navegador -> FastAPI (API + index.html) -> data/entries.json
 - `GET /api/version`
 - `GET /health/live`
 - `GET /health/ready`
+- `GET /metrics` (métricas Prometheus)
 
 ## Estado del versionado
 
