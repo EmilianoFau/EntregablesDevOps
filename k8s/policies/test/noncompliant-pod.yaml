@@ -1,0 +1,16 @@
+# Manifiesto NO conforme a propósito, para probar las políticas de Kyverno.
+# Viola las tres: etiqueta latest, sin resources y ejecución como root.
+# Debe ser RECHAZADO por el admission controller:
+#   kubectl apply -f k8s/policies/test/noncompliant-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: noncompliant
+  labels:
+    app: noncompliant
+spec:
+  securityContext:
+    runAsUser: 0
+  containers:
+    - name: nginx
+      image: nginx:latest

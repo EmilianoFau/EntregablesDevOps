@@ -1,0 +1,13 @@
+# Falco — detección en tiempo de ejecución
+# Instalación: helm install falco falcosecurity/falco -n falco --create-namespace --set driver.kind=modern_ebpf --set tty=true --set falcoctl.artifact.install.enabled=false --set falcoctl.artifact.follow.enabled=false
+# Falco: Falco version: 0.45.2
+#
+# Acción sospechosa ejecutada (2026-11-03 22:10:42 UTC):
+#   kubectl exec -it deploy/journal-green -c journal -- sh -c 'echo dentro del pod; id; hostname; cat /etc/shadow; exit 0'
+# Salida en el pod: uid=100(journal) ... / cat: /etc/shadow: Permission denied (el contenedor no es root)
+#
+# Alertas registradas por Falco:
+#   kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -E 'shell was spawned|Sensitive file'
+
+22:10:42.535020013: Notice A shell was spawned in a container with an attached terminal | evt_type=execve user=<NA> user_uid=100 user_loginuid=-1 process=sh proc_exepath=/usr/bin/dash parent=<NA> command=sh -c echo dentro del pod; id; hostname; cat /etc/shadow; exit 0 terminal=34816 exe_flags=EXE_LOWER_LAYER container_id=c19ae0d913b8 container_name=k8s_journal_journal-green-598b5b9788-2lt8n_default_933af5e8-c194-4972-925e-92e6fbb5295c_0 container_image_repository=journal container_image_tag=v2 k8s_pod_name=journal-green-598b5b9788-2lt8n k8s_ns_name=default
+22:10:42.619482791: Warning Sensitive file opened for reading by non-trusted program | file=/etc/shadow gparent=<NA> ggparent=<NA> gggparent=<NA> evt_type=openat user=<NA> user_uid=100 user_loginuid=-1 process=cat proc_exepath=/usr/bin/cat parent=sh command=cat /etc/shadow terminal=34816 container_id=c19ae0d913b8 container_name=k8s_journal_journal-green-598b5b9788-2lt8n_default_933af5e8-c194-4972-925e-92e6fbb5295c_0 container_image_repository=journal container_image_tag=v2 k8s_pod_name=journal-green-598b5b9788-2lt8n k8s_ns_name=default

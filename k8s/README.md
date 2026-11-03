@@ -112,3 +112,45 @@ done
 ```
 
 En menos de un minuto la alerta pasa a **Firing** en Prometheus y el panel de Grafana muestra **ALERTA**. Cuando pasan 5 minutos sin escrituras, vuelve a OK.
+
+## Seguridad (DevSecOps)
+
+Los manifiestos corren como usuario no root, con raíz de solo lectura, sin capabilities y con `requests`/`limits`. Como la raíz es de solo lectura, el initContainer `seed-data` copia los datos de ejemplo a un volumen `emptyDir` en `/app/data`.
+
+Si la imagen `journal:v2` es anterior a este cambio, hay que reconstruirla dentro de Minikube (ver arriba) antes de aplicar las políticas.
+
+### Kyverno: políticas de admisión
+
+```bash
+helm repo add kyverno https://kyverno.github.io/kyverno
+helm install kyverno kyverno/kyverno -n kyverno --create-namespace
+kubectl apply -f k8s/policies/
+kubectl get clusterpolicy
+```
+
+Tres políticas en modo Enforce: sin etiqueta `latest`, `requests`/`limits` obligatorios y nada de root. Para comprobar que funcionan, este manifiesto no conforme debe ser **rechazado**:
+
+```bash
+kubectl apply -f k8s/policies/test/noncompliant-pod.yaml
+```
+
+### KubeLinter
+
+```bash
+kube-linter lint k8s/config.yaml k8s/blue-green.yaml k8s/monitoring.yaml
+```
+
+### Falco: detección en tiempo de ejecución
+
+```bash
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm install falco falcosecurity/falco -n falco --create-namespace \
+  --set driver.kind=modern_ebpf --set tty=true \
+  --set falcoctl.artifact.install.enabled=false --set falcoctl.artifact.follow.enabled=false
+kubectl rollout status ds/falco -n falco
+
+kubectl exec -it deploy/journal-green -c journal -- sh   # acción sospechosa
+kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep "shell was spawned"
+```
+
+Resultados y justificaciones: [`reports/README.md`](../reports/README.md).

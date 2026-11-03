@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS base
+FROM python:3.13-slim-trixie AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -7,7 +7,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN addgroup --system journal && adduser --system --ingroup journal journal
+# Parches de seguridad del sistema base y usuario sin privilegios con UID/GID fijos
+# (100:101, los mismos que tenía la V1) para que Kubernetes pueda verificar runAsNonRoot.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && addgroup --system --gid 101 journal \
+    && adduser --system --uid 100 --ingroup journal journal
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
@@ -21,10 +27,14 @@ FROM base AS test
 COPY requirements-dev.txt ./
 COPY tests ./tests
 RUN pip install --no-cache-dir -r requirements-dev.txt
+USER 100:101
 CMD ["pytest", "-q"]
 
 FROM base AS runtime
-USER journal
+# pip no se usa en ejecución y trae librerías vendorizadas con CVEs (urllib3, msgpack).
+RUN python -m pip uninstall -y pip \
+    && rm -rf /usr/local/lib/python3.13/ensurepip
+USER 100:101
 
 EXPOSE 8000
 

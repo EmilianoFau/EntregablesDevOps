@@ -1,0 +1,151 @@
+# KubeLinter 0.7.4 — 2026-11-03T19:12:31-03:00
+
+## 1. Checks por defecto sobre los manifiestos del proyecto
+$ kube-linter lint k8s/config.yaml k8s/blue-green.yaml k8s/monitoring.yaml
+KubeLinter 0.7.4
+
+No lint errors found!
+
+## 2. Control: el manifiesto no conforme de prueba SÍ es detectado
+$ kube-linter lint k8s/policies/test/noncompliant-pod.yaml
+KubeLinter 0.7.4
+
+k8s/policies/test/noncompliant-pod.yaml: (object: <no namespace>/noncompliant /v1, Kind=Pod) The container "nginx" is using an invalid container image, "nginx:latest". Please use images that are not blocked by the `BlockList` criteria : [".*:(latest)$" "^[^:]*$" "(.*/[^:]+)$"] (check: latest-tag, remediation: Use a container image with a specific tag other than latest.)
+
+k8s/policies/test/noncompliant-pod.yaml: (object: <no namespace>/noncompliant /v1, Kind=Pod) container "nginx" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+k8s/policies/test/noncompliant-pod.yaml: (object: <no namespace>/noncompliant /v1, Kind=Pod) container "nginx" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.)
+
+k8s/policies/test/noncompliant-pod.yaml: (object: <no namespace>/noncompliant /v1, Kind=Pod) container "nginx" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/policies/test/noncompliant-pod.yaml: (object: <no namespace>/noncompliant /v1, Kind=Pod) container "nginx" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+Error: found 5 lint errors
+
+## 3. Todos los checks opcionales (addAllBuiltIn: true) — hallazgos justificados en reports/README.md
+$ kube-linter lint --config <(printf 'checks:\n  addAllBuiltIn: true\n') k8s/config.yaml k8s/blue-green.yaml k8s/monitoring.yaml
+KubeLinter 0.7.4
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) Object does not define any DNSConfig rules. (check: dnsconfig-options, remediation: Specify dnsconfig options in your Pod specification to ensure the expected DNS setting on the Pod. Refer to https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config for details.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) object has 1 replica but minimum required replicas is 3 (check: minimum-three-replicas, remediation: Increase the number of replicas in the deployment to at least three to increase the fault tolerance of the deployment.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) object does not define any node affinity rules. (check: no-node-affinity, remediation: Specify node-affinity in your pod specification to ensure that the orchestrator attempts to schedule replicas on specified nodes. Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity for details.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) object has no strategy type but must match regex ^(RollingUpdate|Rolling)$ (check: no-rolling-update-strategy, remediation: Use a rolling update strategy to avoid service disruption during an update. A rolling update strategy allows for pods to be systematicaly replaced in a controlled fashion to ensure no service disruption.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) pods created by this object are non-isolated (check: non-isolated-pod, remediation: Ensure pod does not accept unsafe traffic by isolating it with a NetworkPolicy. See https://cloud.redhat.com/blog/guide-to-kubernetes-ingress-network-policies for more details.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) no annotation matching "email=[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" found (check: required-annotation-email, remediation: Add an email annotation to your object with the email address of the object's owner.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) no label matching "owner=<any>" found (check: required-label-owner, remediation: Add an email annotation to your object with the name of the object's owner.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) object has a restart policy defined with '' but the only accepted restart policies are '[Always OnFailure]' (check: restart-policy, remediation: Set up the restart policy for your object to 'Always' or 'OnFailure' to increase the fault tolerance.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) Object does not define any DNSConfig rules. (check: dnsconfig-options, remediation: Specify dnsconfig options in your Pod specification to ensure the expected DNS setting on the Pod. Refer to https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config for details.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) object has 1 replica but minimum required replicas is 3 (check: minimum-three-replicas, remediation: Increase the number of replicas in the deployment to at least three to increase the fault tolerance of the deployment.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) object does not define any node affinity rules. (check: no-node-affinity, remediation: Specify node-affinity in your pod specification to ensure that the orchestrator attempts to schedule replicas on specified nodes. Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity for details.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) object has no strategy type but must match regex ^(RollingUpdate|Rolling)$ (check: no-rolling-update-strategy, remediation: Use a rolling update strategy to avoid service disruption during an update. A rolling update strategy allows for pods to be systematicaly replaced in a controlled fashion to ensure no service disruption.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) pods created by this object are non-isolated (check: non-isolated-pod, remediation: Ensure pod does not accept unsafe traffic by isolating it with a NetworkPolicy. See https://cloud.redhat.com/blog/guide-to-kubernetes-ingress-network-policies for more details.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) no annotation matching "email=[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" found (check: required-annotation-email, remediation: Add an email annotation to your object with the email address of the object's owner.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) no label matching "owner=<any>" found (check: required-label-owner, remediation: Add an email annotation to your object with the name of the object's owner.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) object has a restart policy defined with '' but the only accepted restart policies are '[Always OnFailure]' (check: restart-policy, remediation: Set up the restart policy for your object to 'Always' or 'OnFailure' to increase the fault tolerance.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal /v1, Kind=Service) "NodePort" service type is forbidden. (check: exposed-services, remediation: Ensure containers are not exposed through a forbidden service type such as NodePort or LoadBalancer.)
+
+k8s/blue-green.yaml: (object: <no namespace>/journal /v1, Kind=Service) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) Object does not define any DNSConfig rules. (check: dnsconfig-options, remediation: Specify dnsconfig options in your Pod specification to ensure the expected DNS setting on the Pod. Refer to https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config for details.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) object has 1 replica but minimum required replicas is 3 (check: minimum-three-replicas, remediation: Increase the number of replicas in the deployment to at least three to increase the fault tolerance of the deployment.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) object does not define any node affinity rules. (check: no-node-affinity, remediation: Specify node-affinity in your pod specification to ensure that the orchestrator attempts to schedule replicas on specified nodes. Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity for details.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) object has no strategy type but must match regex ^(RollingUpdate|Rolling)$ (check: no-rolling-update-strategy, remediation: Use a rolling update strategy to avoid service disruption during an update. A rolling update strategy allows for pods to be systematicaly replaced in a controlled fashion to ensure no service disruption.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) pods created by this object are non-isolated (check: non-isolated-pod, remediation: Ensure pod does not accept unsafe traffic by isolating it with a NetworkPolicy. See https://cloud.redhat.com/blog/guide-to-kubernetes-ingress-network-policies for more details.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) no annotation matching "email=[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" found (check: required-annotation-email, remediation: Add an email annotation to your object with the email address of the object's owner.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) no label matching "owner=<any>" found (check: required-label-owner, remediation: Add an email annotation to your object with the name of the object's owner.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) object has a restart policy defined with '' but the only accepted restart policies are '[Always OnFailure]' (check: restart-policy, remediation: Set up the restart policy for your object to 'Always' or 'OnFailure' to increase the fault tolerance.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus /v1, Kind=Service) "NodePort" service type is forbidden. (check: exposed-services, remediation: Ensure containers are not exposed through a forbidden service type such as NodePort or LoadBalancer.)
+
+k8s/monitoring.yaml: (object: <no namespace>/prometheus /v1, Kind=Service) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) Object does not define any DNSConfig rules. (check: dnsconfig-options, remediation: Specify dnsconfig options in your Pod specification to ensure the expected DNS setting on the Pod. Refer to https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config for details.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) object has 1 replica but minimum required replicas is 3 (check: minimum-three-replicas, remediation: Increase the number of replicas in the deployment to at least three to increase the fault tolerance of the deployment.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) object does not define any node affinity rules. (check: no-node-affinity, remediation: Specify node-affinity in your pod specification to ensure that the orchestrator attempts to schedule replicas on specified nodes. Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity for details.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) object has no strategy type but must match regex ^(RollingUpdate|Rolling)$ (check: no-rolling-update-strategy, remediation: Use a rolling update strategy to avoid service disruption during an update. A rolling update strategy allows for pods to be systematicaly replaced in a controlled fashion to ensure no service disruption.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) pods created by this object are non-isolated (check: non-isolated-pod, remediation: Ensure pod does not accept unsafe traffic by isolating it with a NetworkPolicy. See https://cloud.redhat.com/blog/guide-to-kubernetes-ingress-network-policies for more details.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) no annotation matching "email=[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" found (check: required-annotation-email, remediation: Add an email annotation to your object with the email address of the object's owner.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) no label matching "owner=<any>" found (check: required-label-owner, remediation: Add an email annotation to your object with the name of the object's owner.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) object has a restart policy defined with '' but the only accepted restart policies are '[Always OnFailure]' (check: restart-policy, remediation: Set up the restart policy for your object to 'Always' or 'OnFailure' to increase the fault tolerance.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana /v1, Kind=Service) "NodePort" service type is forbidden. (check: exposed-services, remediation: Ensure containers are not exposed through a forbidden service type such as NodePort or LoadBalancer.)
+
+k8s/monitoring.yaml: (object: <no namespace>/grafana /v1, Kind=Service) object in default namespace (check: use-namespace, remediation: Create namespaces for objects in your deployment.)
+
+Error: found 42 lint errors
+
+## 4. Referencia: manifiestos ANTES de los cambios (commit bad12ab)
+$ kube-linter lint <blue-green.yaml y monitoring.yaml de bad12ab>
+KubeLinter 0.7.4
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) container "journal" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) container "journal" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) container "journal" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-blue apps/v1, Kind=Deployment) container "journal" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) container "journal" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) container "journal" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) container "journal" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) blue-green.yaml: (object: <no namespace>/journal-green apps/v1, Kind=Deployment) container "journal" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) container "prometheus" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) container "prometheus" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) container "prometheus" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/prometheus apps/v1, Kind=Deployment) container "prometheus" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) container "grafana" does not have a read-only root file system (check: no-read-only-root-fs, remediation: Set readOnlyRootFilesystem to true in the container securityContext.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) container "grafana" is not set to runAsNonRoot (check: run-as-non-root, remediation: Set runAsUser to a non-zero number and runAsNonRoot to true in your pod or container securityContext. Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ for details.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) container "grafana" has cpu request 0 (check: unset-cpu-requirements, remediation: Set CPU requests for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+k8s/ (bad12ab) monitoring.yaml: (object: <no namespace>/grafana apps/v1, Kind=Deployment) container "grafana" has memory limit 0 (check: unset-memory-requirements, remediation: Set memory limits for your container based on its requirements. Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits for details.)
+
+Error: found 16 lint errors

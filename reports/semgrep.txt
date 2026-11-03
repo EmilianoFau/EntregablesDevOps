@@ -1,0 +1,243 @@
+# Semgrep 1.183.0 — 2026-11-03T19:04:00-03:00
+# $ semgrep scan --metrics=off --config p/python --config p/dockerfile --config p/kubernetes --config p/javascript --exclude data .
+
+########## ANTES DE LAS CORRECCIONES (9 hallazgos) ##########
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 24 files tracked by git with 243 Code rules:
+                                                                                                                        
+  Language     Rules   Files          Origin      Rules                                                                 
+ ────────────────────────────        ───────────────────                                                                
+  python         151       9          Community     243                                                                 
+  yaml            12       4                                                                                            
+  dockerfile       7       1                                                                                            
+                                                                                                                        
+                   
+                   
+┌─────────────────┐
+│ 9 Code Findings │
+└─────────────────┘
+              
+    Dockerfile
+   ❯❯❱ dockerfile.security.missing-user.missing-user
+          ❰❰ Blocking ❱❱
+          By not specifying a USER, a program in the container may run as 'root'. This is a security hazard.
+          If an attacker can control a process running as root, they may have control over the container.   
+          Ensure that the last USER in a Dockerfile is a USER other than 'root'.                            
+          Details: https://sg.run/Gbvn                                                                      
+                                                                                                            
+           ▶▶┆ Autofix ▶ USER non-root CMD ["pytest", "-q"]
+           24┆ CMD ["pytest", "-q"]
+                       
+    k8s/blue-green.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           17┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.writable-filesystem-container.writable-filesystem-container
+          ❰❰ Blocking ❱❱
+          Container journal is running with a writable root filesystem. This may allow malicious applications
+          to download and run additional payloads, or modify container files. If an application inside a     
+          container has to save something temporarily consider using a tmpfs. Add 'readOnlyRootFilesystem:   
+          true' to this container to prevent this.                                                           
+          Details: https://sg.run/ZePL                                                                       
+                                                                                                             
+           19┆ - name: journal
+   
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           50┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.writable-filesystem-container.writable-filesystem-container
+          ❰❰ Blocking ❱❱
+          Container journal is running with a writable root filesystem. This may allow malicious applications
+          to download and run additional payloads, or modify container files. If an application inside a     
+          container has to save something temporarily consider using a tmpfs. Add 'readOnlyRootFilesystem:   
+          true' to this container to prevent this.                                                           
+          Details: https://sg.run/ZePL                                                                       
+                                                                                                             
+           52┆ - name: journal
+                       
+    k8s/monitoring.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           77┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.writable-filesystem-container.writable-filesystem-container
+          ❰❰ Blocking ❱❱
+          Container prometheus is running with a writable root filesystem. This may allow malicious         
+          applications to download and run additional payloads, or modify container files. If an application
+          inside a container has to save something temporarily consider using a tmpfs. Add                  
+          'readOnlyRootFilesystem: true' to this container to prevent this.                                 
+          Details: https://sg.run/ZePL                                                                      
+                                                                                                            
+           80┆ - name: prometheus
+   
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+          193┆ spec:
+   
+    ❯❱ yaml.kubernetes.security.writable-filesystem-container.writable-filesystem-container
+          ❰❰ Blocking ❱❱
+          Container grafana is running with a writable root filesystem. This may allow malicious applications
+          to download and run additional payloads, or modify container files. If an application inside a     
+          container has to save something temporarily consider using a tmpfs. Add 'readOnlyRootFilesystem:   
+          true' to this container to prevent this.                                                           
+          Details: https://sg.run/ZePL                                                                       
+                                                                                                             
+          195┆ - name: grafana
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 9 (9 blocking)
+ • Rules run: 169
+ • Targets scanned: 14
+ • Parsed lines: ~100.0%
+ • Scan skipped: 
+   ◦ Matching --exclude patterns: 1
+   ◦ Files matching .semgrepignore patterns: 2
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 169 rules on 14 files: 9 findings.
+
+
+########## DESPUÉS DE LAS CORRECCIONES (5 hallazgos, falsos positivos: ver reports/README.md) ##########
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 29 files tracked by git with 243 Code rules:
+                                                                                                                        
+  Language     Rules   Files          Origin      Rules                                                                 
+ ────────────────────────────        ───────────────────                                                                
+  python         151       9          Community     243                                                                 
+  yaml            12       7                                                                                            
+  dockerfile       7       1                                                                                            
+                                                                                                                        
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 5 (5 blocking)
+ • Rules run: 169
+ • Targets scanned: 17
+ • Parsed lines: ~100.0%
+ • Scan skipped: 
+   ◦ Matching --exclude patterns: 1
+   ◦ Files matching .semgrepignore patterns: 3
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 169 rules on 17 files: 5 findings.
+                   
+                   
+┌─────────────────┐
+│ 5 Code Findings │
+└─────────────────┘
+                                         
+    k8s/policies/disallow-latest-tag.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           27┆ spec:
+            ⋮┆----------------------------------------
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           41┆ spec:
+                                             
+    k8s/policies/require-requests-limits.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           27┆ spec:
+                                             
+    k8s/policies/require-run-as-non-root.yaml
+     ❱ yaml.kubernetes.security.run-as-non-root.run-as-non-root
+          ❰❰ Blocking ❱❱
+          When running containers in Kubernetes, it's important to ensure that they  are properly secured to  
+          prevent privilege escalation attacks.  One potential vulnerability is when a container is allowed to
+          run  applications as the root user, which could allow an attacker to gain  access to sensitive      
+          resources. To mitigate this risk, it's recommended to  add a `securityContext` to the container,    
+          with the parameter `runAsNonRoot`  set to `true`. This will ensure that the container runs as a non-
+          root user,  limiting the damage that could be caused by any potential attacks. By  adding a         
+          `securityContext` to the container in your Kubernetes pod, you can  help to ensure that your        
+          containerized applications are more secure and  less vulnerable to privilege escalation attacks.    
+          Details: https://sg.run/dgP5                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           41┆ - spec:
+            ⋮┆----------------------------------------
+           ▶▶┆ Autofix ▶ spec: securityContext: runAsNonRoot: true #
+           58┆ spec:
+
