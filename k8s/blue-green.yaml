@@ -15,12 +15,61 @@ spec:
         color: blue
         version: v1
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # La raíz es de solo lectura: se copian los datos de ejemplo de la imagen
+        # a un volumen escribible antes de arrancar la app.
+        - name: seed-data
+          image: journal:v1
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "/app/data/entries.json", "/seed/entries.json"]
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources: &journal-resources
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: data
+              mountPath: /seed
       containers:
         - name: journal
           image: journal:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+          securityContext: *container-security
+          resources: *journal-resources
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: tmp
+              mountPath: /tmp
           envFrom:
             - configMapRef:
                 name: journal-config
@@ -29,6 +78,11 @@ spec:
               value: v1
             - name: DEPLOYMENT_COLOR
               value: blue
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,12 +102,61 @@ spec:
         version: v2
         metrics: enabled
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # La raíz es de solo lectura: se copian los datos de ejemplo de la imagen
+        # a un volumen escribible antes de arrancar la app.
+        - name: seed-data
+          image: journal:v2
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "/app/data/entries.json", "/seed/entries.json"]
+          securityContext: &container-security
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources: &journal-resources
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          volumeMounts:
+            - name: data
+              mountPath: /seed
       containers:
         - name: journal
           image: journal:v2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
+          securityContext: *container-security
+          resources: *journal-resources
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: tmp
+              mountPath: /tmp
           envFrom:
             - configMapRef:
                 name: journal-config
@@ -62,6 +165,11 @@ spec:
               value: v2
             - name: DEPLOYMENT_COLOR
               value: green
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

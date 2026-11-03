@@ -1,0 +1,47 @@
+# Política 1: prohibir imágenes sin etiqueta o con la etiqueta "latest".
+# "latest" no identifica una versión concreta: impide saber qué se está
+# ejecutando y rompe la reproducibilidad y el rollback de blue/green.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Prohibir la etiqueta latest
+    policies.kyverno.io/severity: medium
+spec:
+  background: true
+  rules:
+    - name: require-image-tag
+      match: &pods
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude: &system-namespaces
+        any:
+          - resources:
+              namespaces: ["kube-system", "kyverno", "falco"]
+      validate:
+        failureAction: Enforce
+        message: "Las imágenes deben tener una etiqueta explícita (ej. journal:v2)."
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+            =(initContainers):
+              - image: "*:*"
+            =(ephemeralContainers):
+              - image: "*:*"
+    - name: validate-image-tag
+      match: *pods
+      exclude: *system-namespaces
+      validate:
+        failureAction: Enforce
+        message: "No se permite la etiqueta 'latest': usá una versión fija."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+            =(initContainers):
+              - image: "!*:latest"
+            =(ephemeralContainers):
+              - image: "!*:latest"

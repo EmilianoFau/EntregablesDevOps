@@ -51,6 +51,10 @@ docker run --rm journal:test
 
 Las pruebas cubren CRUD de hoy, validaciones, fechas no seleccionables, bloqueo del pasado, días omitidos y cambio de día.
 
+## Seguridad (DevSecOps)
+
+El Entregable 3 agrega auditoría de dependencias (pip-audit), análisis estático (Semgrep), escaneo de imagen (Trivy), políticas de Kyverno, KubeLinter y detección en tiempo de ejecución con Falco. Los pasos están en [`k8s/README.md`](k8s/README.md#seguridad-devsecops) y los resultados en [`reports/`](reports/README.md).
+
 ## Datos
 
 El repositorio incluye dos entradas ficticias en `data/entries.json`. Para volver a agregar ejemplos relativos al día actual si esas fechas están libres:

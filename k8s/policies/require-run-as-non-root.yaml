@@ -1,0 +1,69 @@
+# Política 3: impedir contenedores que se ejecuten como root.
+# Exige runAsNonRoot: true (a nivel pod o en cada contenedor) y prohíbe
+# runAsUser: 0. Si alguien escapa del contenedor, no lo hace como root.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-non-root
+  annotations:
+    policies.kyverno.io/title: Impedir contenedores root
+    policies.kyverno.io/severity: high
+spec:
+  background: true
+  rules:
+    - name: run-as-non-root
+      match: &pods
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude: &system-namespaces
+        any:
+          - resources:
+              namespaces: ["kube-system", "kyverno", "falco"]
+      validate:
+        failureAction: Enforce
+        message: "Se requiere securityContext.runAsNonRoot: true en el pod o en todos sus contenedores."
+        anyPattern:
+          # Opción A: definido a nivel pod, y ningún contenedor lo desactiva.
+          - spec:
+              securityContext:
+                runAsNonRoot: true
+              containers:
+                - =(securityContext):
+                    =(runAsNonRoot): true
+              =(initContainers):
+                - =(securityContext):
+                    =(runAsNonRoot): true
+              =(ephemeralContainers):
+                - =(securityContext):
+                    =(runAsNonRoot): true
+          # Opción B: definido explícitamente en cada contenedor.
+          - spec:
+              containers:
+                - securityContext:
+                    runAsNonRoot: true
+              =(initContainers):
+                - securityContext:
+                    runAsNonRoot: true
+              =(ephemeralContainers):
+                - securityContext:
+                    runAsNonRoot: true
+    - name: deny-run-as-user-root
+      match: *pods
+      exclude: *system-namespaces
+      validate:
+        failureAction: Enforce
+        message: "runAsUser: 0 (root) no está permitido."
+        pattern:
+          spec:
+            =(securityContext):
+              =(runAsUser): ">0"
+            containers:
+              - =(securityContext):
+                  =(runAsUser): ">0"
+            =(initContainers):
+              - =(securityContext):
+                  =(runAsUser): ">0"
+            =(ephemeralContainers):
+              - =(securityContext):
+                  =(runAsUser): ">0"

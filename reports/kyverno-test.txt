@@ -1,0 +1,83 @@
+# Validación de políticas Kyverno (2026-11-03T19:02:39-03:00)
+
+$ kubectl get clusterpolicy
+NAME                      ADMISSION   BACKGROUND   READY   AGE   MESSAGE
+disallow-latest-tag       true        true         True    10s   Ready
+require-requests-limits   true        true         True    10s   Ready
+require-run-as-non-root   true        true         True    10s   Ready
+
+## 1. Manifiesto NO conforme (nginx:latest, sin resources, runAsUser: 0)
+$ kubectl apply -f k8s/policies/test/noncompliant-pod.yaml
+Error from server: error when creating "k8s/policies/test/noncompliant-pod.yaml": admission webhook "validate.kyverno.svc-fail" denied the request: 
+
+resource Pod/default/noncompliant was blocked due to the following policies 
+
+disallow-latest-tag:
+  validate-image-tag: 'validation error: No se permite la etiqueta ''latest'': usá una versión fija. rule validate-image-tag failed at path /spec/containers/0/image/'
+require-requests-limits:
+  validate-resources: 'validation error: Todos los contenedores deben definir resources.requests y resources.limits de cpu y memory. rule validate-resources failed at path /spec/containers/0/resources/limits/'
+require-run-as-non-root:
+  deny-run-as-user-root: 'validation error: runAsUser: 0 (root) no está permitido. rule deny-run-as-user-root failed at path /spec/securityContext/runAsUser/'
+  run-as-non-root: 'validation error: Se requiere securityContext.runAsNonRoot: true en el pod o en todos sus contenedores. rule run-as-non-root[0] failed at path /spec/securityContext/runAsNonRoot/ rule run-as-non-root[1] failed at path /spec/containers/0/securityContext/'
+(exit code: 1)
+
+## 2. Manifiestos del proyecto (conformes): server dry-run contra el admission controller
+$ kubectl apply --dry-run=server -f k8s/config.yaml -f k8s/blue-green.yaml -f k8s/monitoring.yaml
+configmap/journal-config unchanged (server dry run)
+deployment.apps/journal-blue unchanged (server dry run)
+deployment.apps/journal-green unchanged (server dry run)
+service/journal unchanged (server dry run)
+serviceaccount/prometheus unchanged (server dry run)
+clusterrole.rbac.authorization.k8s.io/prometheus unchanged (server dry run)
+clusterrolebinding.rbac.authorization.k8s.io/prometheus unchanged (server dry run)
+configmap/prometheus-config unchanged (server dry run)
+deployment.apps/prometheus unchanged (server dry run)
+service/prometheus unchanged (server dry run)
+configmap/grafana-provisioning unchanged (server dry run)
+configmap/grafana-dashboards unchanged (server dry run)
+deployment.apps/grafana unchanged (server dry run)
+service/grafana unchanged (server dry run)
+
+## 3. Rollout real con las políticas activas
+deployment.apps/journal-blue restarted
+deployment.apps/journal-green restarted
+deployment.apps/prometheus restarted
+deployment.apps/grafana restarted
+Waiting for deployment "journal-blue" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "journal-blue" rollout to finish: 1 old replicas are pending termination...
+deployment "journal-blue" successfully rolled out
+deployment "journal-green" successfully rolled out
+deployment "prometheus" successfully rolled out
+Waiting for deployment "grafana" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "grafana" rollout to finish: 1 old replicas are pending termination...
+deployment "grafana" successfully rolled out
+NAME                             READY   STATUS        RESTARTS   AGE
+grafana-58b6947959-zlsjr         1/1     Terminating   0          4m45s
+grafana-6c6c89cb4-6mdpb          1/1     Running       0          24s
+journal-blue-7759b7df68-wc6b5    1/1     Running       0          24s
+journal-green-598b5b9788-2lt8n   1/1     Running       0          24s
+prometheus-7575c47784-7k5vq      1/1     Running       0          24s
+
+## 4. Informes de cumplimiento (background scan)
+NAME                                   KIND         NAME                             PASS   FAIL   WARN   ERROR   SKIP   AGE
+02dde633-ba89-4f61-896f-66c99040c9b1   ReplicaSet   journal-blue-55b6684c4           3      2      0      0       0      27s
+162bb5c6-8181-4e50-9e4f-025fc9adefa7   ReplicaSet   prometheus-857dcc64c8            3      2      0      0       0      27s
+23d02ae3-470b-422f-930e-d8080c1dfc6c   Pod          grafana-58b6947959-zlsjr         5      0      0      0       0      27s
+42aba5e5-d337-467e-aa8f-c8b561462930   ReplicaSet   journal-green-694664db46         5      0      0      0       0      27s
+501cd632-ae0a-48f6-aff0-bb1dc0eb1ba3   Deployment   journal-green                    5      0      0      0       0      27s
+5ce71b17-9df3-4b13-a8c1-d15ca3df7a2b   Deployment   prometheus                       5      0      0      0       0      27s
+655d3d0b-94e9-496b-83b8-ebc328539664   ReplicaSet   grafana-58b6947959               5      0      0      0       0      27s
+69c0f797-b5cc-4a79-8850-e03532d1e840   ReplicaSet   journal-green-6d9c94dcb8         5      0      0      0       0      27s
+6a220d5f-fb1e-4d04-a1b5-f10c94ee8f13   ReplicaSet   grafana-d9766988f                3      2      0      0       0      27s
+6e9e1b77-ff78-4bc8-8e07-5f6cc4b0251b   ReplicaSet   journal-green-84667f745          3      2      0      0       0      27s
+734402cd-eec8-43ea-b5ca-ac89ed5d78f6   ReplicaSet   journal-green-859b996756         3      2      0      0       0      27s
+79f2975c-9367-4d43-a07e-2a5c80e0463e   Pod          prometheus-7575c47784-7k5vq      5      0      0      0       0      5s
+8d1a5e91-58ef-403e-9978-49c615a69364   ReplicaSet   prometheus-689db9dc9f            5      0      0      0       0      27s
+933af5e8-c194-4972-925e-92e6fbb5295c   Pod          journal-green-598b5b9788-2lt8n   5      0      0      0       0      5s
+9d643077-f4bd-43a3-b92d-29ba134383c5   Pod          grafana-6c6c89cb4-6mdpb          5      0      0      0       0      5s
+b17c526f-e14e-412f-b358-751edb3d340d   ReplicaSet   journal-green-5bc4f9cdf4         3      2      0      0       0      27s
+bd6f27a8-119d-4327-bba2-e264be64967f   Deployment   grafana                          5      0      0      0       0      27s
+cec05f0e-c65c-424b-842a-3281718b2568   ReplicaSet   journal-blue-6847bc4d79          5      0      0      0       0      27s
+cf66112f-9215-496e-8f4c-fa855fd949db   Pod          journal-blue-7759b7df68-wc6b5    5      0      0      0       0      5s
+f177b223-3384-4359-bbad-8e0cefd2e578   ReplicaSet   journal-green-58866c68dc         3      2      0      0       0      27s
+f37fa7bc-a54f-4a5c-a13e-757893542ce5   Deployment   journal-blue                     5      0      0      0       0      27s
