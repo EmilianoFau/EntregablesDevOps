@@ -23,7 +23,7 @@ kubectl delete namespace "$APP_NAMESPACE" falco monitoring kyverno --ignore-not-
 ok "Namespaces en borrado"
 
 step "Borrando CRDs de los operadores"
-kubectl get crd -o name | grep -E 'monitoring\.coreos\.com|kyverno\.io|wgpolicyk8s\.io' \
+kubectl get crd -o name | grep -E 'monitoring\.coreos\.com|kyverno\.io|wgpolicyk8s\.io|openreports\.io' \
   | xargs -r kubectl delete --ignore-not-found >/dev/null
 ok "CRDs de Prometheus Operator y Kyverno eliminados"
 

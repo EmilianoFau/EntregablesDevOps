@@ -36,21 +36,31 @@ helm repo add falcosecurity https://falcosecurity.github.io/charts >/dev/null 2>
 helm repo update >/dev/null
 ok "kyverno, prometheus-community y falcosecurity"
 
+# Instala un chart solo si ese release no está ya desplegado en esa versión.
+# Así el script se puede correr varias veces sin reinstalar los operadores.
+install_once() { # release namespace chart version [args...]
+  local release=$1 ns=$2 chart=$3 version=$4; shift 4
+  if helm list -n "$ns" --deployed -o json 2>/dev/null | grep -q "\"name\":\"$release\".*\"chart\":\"[a-z-]*-$version\""; then
+    ok "$release $version ya estaba instalado"
+    return
+  fi
+  helm upgrade --install "$release" "$chart" --version "$version" \
+    -n "$ns" --create-namespace --wait "$@"
+}
+
 step "3/8 Operador: Kyverno ${KYVERNO_CHART_VERSION}"
-helm upgrade --install kyverno kyverno/kyverno --version "$KYVERNO_CHART_VERSION" \
-  -n kyverno --create-namespace --wait --timeout 10m
+install_once kyverno kyverno kyverno/kyverno "$KYVERNO_CHART_VERSION" --timeout 10m
 ok "Kyverno listo"
 
 step "4/8 Operador: kube-prometheus-stack ${PROM_STACK_CHART_VERSION} (Prometheus + Grafana)"
-helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-  --version "$PROM_STACK_CHART_VERSION" -n monitoring --create-namespace \
-  -f monitoring/values.yaml --wait --timeout 15m
+install_once monitoring monitoring prometheus-community/kube-prometheus-stack \
+  "$PROM_STACK_CHART_VERSION" -f monitoring/values.yaml --timeout 15m
 ok "Prometheus Operator, Prometheus y Grafana listos"
 
 step "5/8 Falco ${FALCO_CHART_VERSION}"
 if $WITH_FALCO; then
-  helm upgrade --install falco falcosecurity/falco --version "$FALCO_CHART_VERSION" \
-    -n falco --create-namespace -f falco/values.yaml --wait --timeout 10m
+  install_once falco falco falcosecurity/falco "$FALCO_CHART_VERSION" \
+    -f falco/values.yaml --timeout 10m
   ok "Falco corriendo con la regla propia del diario"
 else
   warn "Salteado (--sin-falco)"
@@ -59,12 +69,12 @@ fi
 step "6/8 Políticas de Kyverno y dashboard de Grafana"
 kubectl create namespace "$APP_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f - >/dev/null
 kubectl apply -f k8s/policies/
-kubectl wait --for=condition=Ready clusterpolicy --all --timeout=120s
+kubectl wait --for=jsonpath="{.status.conditionStatus.ready}"=true validatingpolicy --all --timeout=120s
 kubectl create configmap journal-dashboard -n monitoring \
   --from-file=journal.json=grafana/dashboard.json --dry-run=client -o yaml \
   | kubectl label --local -f - grafana_dashboard=1 -o yaml \
   | kubectl apply -f - >/dev/null
-ok "4 políticas en Enforce y dashboard cargado en Grafana"
+ok "4 políticas en modo Deny y dashboard cargado en Grafana"
 
 step "7/8 Imágenes de la app"
 HELM_IMAGE_ARGS=()

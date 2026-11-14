@@ -1,69 +1,51 @@
 # Política 3: impedir contenedores que se ejecuten como root.
 # Exige runAsNonRoot: true (a nivel pod o en cada contenedor) y prohíbe
 # runAsUser: 0. Si alguien escapa del contenedor, no lo hace como root.
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: require-run-as-non-root
   annotations:
     policies.kyverno.io/title: Impedir contenedores root
     policies.kyverno.io/severity: high
 spec:
-  background: true
-  rules:
-    - name: run-as-non-root
-      match: &pods
-        any:
-          - resources:
-              kinds: ["Pod"]
-      exclude: &system-namespaces
-        any:
-          - resources:
-              namespaces: ["kube-system", "kube-public", "kube-node-lease", "kyverno", "falco", "monitoring", "ingress-nginx"]
-      validate:
-        failureAction: Enforce
-        message: "Se requiere securityContext.runAsNonRoot: true en el pod o en todos sus contenedores."
-        anyPattern:
-          # Opción A: definido a nivel pod, y ningún contenedor lo desactiva.
-          - spec:
-              securityContext:
-                runAsNonRoot: true
-              containers:
-                - =(securityContext):
-                    =(runAsNonRoot): true
-              =(initContainers):
-                - =(securityContext):
-                    =(runAsNonRoot): true
-              =(ephemeralContainers):
-                - =(securityContext):
-                    =(runAsNonRoot): true
-          # Opción B: definido explícitamente en cada contenedor.
-          - spec:
-              containers:
-                - securityContext:
-                    runAsNonRoot: true
-              =(initContainers):
-                - securityContext:
-                    runAsNonRoot: true
-              =(ephemeralContainers):
-                - securityContext:
-                    runAsNonRoot: true
-    - name: deny-run-as-user-root
-      match: *pods
-      exclude: *system-namespaces
-      validate:
-        failureAction: Enforce
-        message: "runAsUser: 0 (root) no está permitido."
-        pattern:
-          spec:
-            =(securityContext):
-              =(runAsUser): ">0"
-            containers:
-              - =(securityContext):
-                  =(runAsUser): ">0"
-            =(initContainers):
-              - =(securityContext):
-                  =(runAsUser): ">0"
-            =(ephemeralContainers):
-              - =(securityContext):
-                  =(runAsUser): ">0"
+  # Deny = rechaza el recurso (equivale al Enforce de las ClusterPolicy viejas).
+  validationActions: [Deny]
+  # Kyverno genera la misma regla para Deployments, Jobs, etc. (autogen), así
+  # un Deployment que no cumple se rechaza de entrada.
+  autogen:
+    podControllers:
+      controllers: [deployments, replicasets, statefulsets, daemonsets, jobs, cronjobs]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+    # Los namespaces del sistema y de las herramientas quedan afuera.
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - kube-public
+            - kube-node-lease
+            - kyverno
+            - falco
+            - monitoring
+            - ingress-nginx
+  variables:
+    - name: containers
+      expression: >-
+        object.spec.containers + object.spec.?initContainers.orValue([]) + object.spec.?ephemeralContainers.orValue([])
+    - name: podNonRoot
+      expression: >-
+        object.spec.?securityContext.?runAsNonRoot.orValue(false)
+  validations:
+    - expression: >-
+        variables.containers.all(c, c.?securityContext.?runAsNonRoot.orValue(variables.podNonRoot) == true)
+      message: "Se requiere securityContext.runAsNonRoot: true en el pod o en todos sus contenedores."
+    - expression: >-
+        object.spec.?securityContext.?runAsUser.orValue(1) != 0 && variables.containers.all(c, c.?securityContext.?runAsUser.orValue(1) != 0)
+      message: "runAsUser: 0 (root) no está permitido."

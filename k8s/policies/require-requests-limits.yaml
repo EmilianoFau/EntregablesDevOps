@@ -1,43 +1,45 @@
 # Política 2: todo contenedor debe declarar requests y limits de CPU y memoria.
 # Sin límites, un pod puede consumir todo el nodo (DoS) y el scheduler no
 # puede repartir la carga.
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: require-requests-limits
   annotations:
     policies.kyverno.io/title: Exigir requests y limits
     policies.kyverno.io/severity: medium
 spec:
-  background: true
-  rules:
-    - name: validate-resources
-      match:
-        any:
-          - resources:
-              kinds: ["Pod"]
-      exclude:
-        any:
-          - resources:
-              namespaces: ["kube-system", "kube-public", "kube-node-lease", "kyverno", "falco", "monitoring", "ingress-nginx"]
-      validate:
-        failureAction: Enforce
-        message: "Todos los contenedores deben definir resources.requests y resources.limits de cpu y memory."
-        pattern:
-          spec:
-            containers:
-              - resources:
-                  requests:
-                    cpu: "?*"
-                    memory: "?*"
-                  limits:
-                    cpu: "?*"
-                    memory: "?*"
-            =(initContainers):
-              - resources:
-                  requests:
-                    cpu: "?*"
-                    memory: "?*"
-                  limits:
-                    cpu: "?*"
-                    memory: "?*"
+  # Deny = rechaza el recurso (equivale al Enforce de las ClusterPolicy viejas).
+  validationActions: [Deny]
+  # Kyverno genera la misma regla para Deployments, Jobs, etc. (autogen), así
+  # un Deployment que no cumple se rechaza de entrada.
+  autogen:
+    podControllers:
+      controllers: [deployments, replicasets, statefulsets, daemonsets, jobs, cronjobs]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+    # Los namespaces del sistema y de las herramientas quedan afuera.
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - kube-public
+            - kube-node-lease
+            - kyverno
+            - falco
+            - monitoring
+            - ingress-nginx
+  variables:
+    - name: containers
+      expression: >-
+        object.spec.containers + object.spec.?initContainers.orValue([])
+  validations:
+    - expression: >-
+        variables.containers.all(c, ['cpu', 'memory'].all(r, r in c.?resources.?requests.orValue({}) && r in c.?resources.?limits.orValue({})))
+      message: "Todos los contenedores deben definir resources.requests y resources.limits de cpu y memory."

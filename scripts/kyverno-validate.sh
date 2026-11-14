@@ -11,8 +11,8 @@ kubectl create namespace "$APP_NAMESPACE" --dry-run=client -o yaml | kubectl app
 
 step "Políticas instaladas"
 {
-  echo '$ kubectl get clusterpolicy'
-  kubectl get clusterpolicy
+  echo '$ kubectl get validatingpolicy'
+  kubectl get validatingpolicy
   echo
 } | tee -a "$LOG"
 
