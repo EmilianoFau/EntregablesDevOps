@@ -1,0 +1,50 @@
+# Configuración de Jenkins como código (plugin configuration-as-code).
+# Los ${...} se leen de las variables de entorno del contenedor (.env.lab4).
+jenkins:
+  systemMessage: "El Último Renglón · CI/CD del Laboratorio 4"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: ${JENKINS_ADMIN_PASSWORD:-admin}
+  authorizationStrategy: loggedInUsersCanDoAnything
+
+unclassified:
+  location:
+    url: http://localhost:8081/
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              id: dockerhub
+              scope: GLOBAL
+              description: Docker Hub (push de imágenes)
+              username: ${DOCKERHUB_USER}
+              password: ${DOCKERHUB_TOKEN}
+          - string:
+              id: snyk-token
+              scope: GLOBAL
+              description: Token de Snyk
+              secret: ${SNYK_TOKEN}
+
+jobs:
+  - script: >
+      pipelineJob('journal-pipeline') {
+        description('Clona, analiza, testea, construye, publica y despliega El Último Renglón')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${REPO_URL:-https://github.com/EmilianoFau/EntregablesDevOps.git}') }
+                branches('*/${REPO_BRANCH:-entrega4}')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(true)
+          }
+        }
+      }
