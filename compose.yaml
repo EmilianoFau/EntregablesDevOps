@@ -1,21 +1,35 @@
+# Desarrollo local: frontend (nginx) -> backend (FastAPI).
+# Abrir http://localhost:8080
 services:
-  app:
+  backend:
     build:
       context: .
       target: runtime
+    image: journal-backend:dev
     environment:
       DATA_FILE: /app/data/entries.json
-      APP_VERSION: v2
-      DEPLOYMENT_COLOR: standalone
+      APP_VERSION: v3
+      DEPLOYMENT_COLOR: compose
       JOURNAL_TIMEZONE: America/Montevideo
     ports:
-      - "8000:8000"
+      - "8000:8000"   # API directa y /docs, útil para depurar
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
       interval: 10s
       timeout: 3s
       retries: 5
       start_period: 5s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    image: journal-frontend:dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
   test:

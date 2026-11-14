@@ -4,3 +4,7 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .DS_Store
+.env.lab4
+.jenkins/
+.port-forwards.pids
+.snyk-venv/

@@ -1,5 +1,26 @@
+# Contexto de build del backend: solo hace falta app/, data/ y los requirements.
 .git
 .env
+.env.*
 .venv
+.snyk-venv
+.jenkins
 __pycache__
 .pytest_cache
+*.pyc
+.DS_Store
+frontend
+helm-chart
+jenkins
+k8s
+monitoring
+falco
+grafana
+semgrep
+scripts
+reports
+docs
+*.md
+*.pdf
+Jenkinsfile
+compose.yaml
