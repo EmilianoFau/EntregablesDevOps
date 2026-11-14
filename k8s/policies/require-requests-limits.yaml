@@ -19,7 +19,7 @@ spec:
       exclude:
         any:
           - resources:
-              namespaces: ["kube-system", "kyverno", "falco"]
+              namespaces: ["kube-system", "kube-public", "kube-node-lease", "kyverno", "falco", "monitoring", "ingress-nginx"]
       validate:
         failureAction: Enforce
         message: "Todos los contenedores deben definir resources.requests y resources.limits de cpu y memory."

@@ -1,0 +1,52 @@
+# Política 4: prohibir la escalada de privilegios.
+# Aunque el contenedor arranque sin root, un binario con setuid (como sudo o
+# passwd) podría darle más permisos que su proceso padre. Con
+# allowPrivilegeEscalation: false el kernel lo impide (flag no_new_privs).
+# Además se rechazan los contenedores "privileged", que tienen acceso total al nodo.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privilege-escalation
+  annotations:
+    policies.kyverno.io/title: Prohibir la escalada de privilegios
+    policies.kyverno.io/severity: high
+spec:
+  background: true
+  rules:
+    - name: require-no-privilege-escalation
+      match: &pods
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude: &system-namespaces
+        any:
+          - resources:
+              namespaces: ["kube-system", "kube-public", "kube-node-lease", "kyverno", "falco", "monitoring", "ingress-nginx"]
+      validate:
+        failureAction: Enforce
+        message: "Cada contenedor debe declarar securityContext.allowPrivilegeEscalation: false."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+            =(initContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: false
+            =(ephemeralContainers):
+              - securityContext:
+                  allowPrivilegeEscalation: false
+    - name: deny-privileged
+      match: *pods
+      exclude: *system-namespaces
+      validate:
+        failureAction: Enforce
+        message: "No se permiten contenedores privileged."
+        pattern:
+          spec:
+            containers:
+              - =(securityContext):
+                  =(privileged): false
+            =(initContainers):
+              - =(securityContext):
+                  =(privileged): false

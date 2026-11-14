@@ -1,0 +1,64 @@
+# Reglas propias de Semgrep para Python/FastAPI.
+# Se suman a las reglas oficiales (p/python) en el pipeline y en scripts/security-scans.sh.
+rules:
+  - id: python-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: >-
+      eval/exec ejecutan texto como código. Si ese texto viene del usuario,
+      es ejecución remota de código.
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+    metadata:
+      cwe: "CWE-95: Eval Injection"
+      owasp: "A03:2021 - Injection"
+
+  - id: python-subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess con shell=True pasa el comando por /bin/sh y permite inyectar
+      comandos. Usar una lista de argumentos sin shell.
+    pattern-either:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - pattern: os.system(...)
+    metadata:
+      cwe: "CWE-78: OS Command Injection"
+
+  - id: python-insecure-deserialization
+    languages: [python]
+    severity: ERROR
+    message: >-
+      pickle y yaml.load sin SafeLoader pueden ejecutar código al deserializar
+      datos que no controlamos. Usar json o yaml.safe_load.
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+      - pattern: yaml.load(...)
+      - pattern: yaml.unsafe_load(...)
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+
+  - id: fastapi-cors-wildcard
+    languages: [python]
+    severity: WARNING
+    message: >-
+      CORS con allow_origins=["*"] deja que cualquier sitio llame a la API
+      desde el navegador del usuario.
+    pattern: $APP.add_middleware(CORSMiddleware, ..., allow_origins=["*"], ...)
+    metadata:
+      cwe: "CWE-942: Permissive Cross-domain Policy"
+
+  - id: journal-log-entry-content
+    languages: [python]
+    severity: WARNING
+    message: >-
+      No se debe registrar el texto de las entradas en los logs: es contenido
+      privado del usuario (regla de privacidad propia del proyecto).
+    pattern-either:
+      - pattern: logging.$LEVEL(..., $X.content, ...)
+      - pattern: $LOGGER.$LEVEL(..., $X.content, ...)
+      - pattern: print(..., $X.content, ...)
+    metadata:
+      cwe: "CWE-532: Insertion of Sensitive Information into Log File"

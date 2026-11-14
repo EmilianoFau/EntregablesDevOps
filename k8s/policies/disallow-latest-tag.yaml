@@ -19,7 +19,7 @@ spec:
       exclude: &system-namespaces
         any:
           - resources:
-              namespaces: ["kube-system", "kyverno", "falco"]
+              namespaces: ["kube-system", "kube-public", "kube-node-lease", "kyverno", "falco", "monitoring", "ingress-nginx"]
       validate:
         failureAction: Enforce
         message: "Las imágenes deben tener una etiqueta explícita (ej. journal:v2)."

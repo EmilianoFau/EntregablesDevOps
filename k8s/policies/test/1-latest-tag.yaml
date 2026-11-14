@@ -1,0 +1,21 @@
+# Viola SOLO la política 1 (disallow-latest-tag): usa nginx:latest.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-latest-tag
+  namespace: journal
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    seccompProfile: { type: RuntimeDefault }
+  containers:
+    - name: app
+      image: nginxinc/nginx-unprivileged:latest
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: { drop: ["ALL"] }
+      resources:
+        requests: { cpu: 10m, memory: 16Mi }
+        limits: { cpu: 50m, memory: 32Mi }

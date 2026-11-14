@@ -1,0 +1,45 @@
+# Valores para el chart oficial de Falco (falcosecurity/falco).
+# helm install falco falcosecurity/falco -n falco --create-namespace -f falco/values.yaml
+
+# Driver eBPF moderno: no necesita compilar un módulo de kernel (anda en Minikube).
+driver:
+  kind: modern_ebpf
+
+# falcoctl descarga reglas de ghcr.io al arrancar; en el Lab 3 eso devolvió
+# HTTP 429 (rate limit). Las reglas por defecto ya vienen en la imagen.
+falcoctl:
+  artifact:
+    install:
+      enabled: false
+    follow:
+      enabled: false
+
+tty: true
+
+falco:
+  json_output: false
+  priority: notice
+
+# Regla propia para nuestra app, además de las reglas por defecto de Falco.
+customRules:
+  journal-rules.yaml: |-
+    - list: journal_backend_binaries
+      items: [python, python3, uvicorn]
+
+    - rule: Proceso inesperado en el backend del diario
+      desc: >
+        El contenedor del backend solo debería ejecutar Python (uvicorn).
+        Cualquier otro binario indica que alguien está ejecutando comandos
+        dentro del pod (kubectl exec, una RCE, etc.).
+      condition: >
+        spawned_process
+        and k8s.ns.name = "journal"
+        and k8s.pod.name startswith "journal-backend"
+        and not proc.name in (journal_backend_binaries)
+        and not (proc.name = cp and proc.cmdline contains "/seed/entries.json")
+      output: >
+        Proceso inesperado en el backend del diario
+        (comando=%proc.cmdline usuario_uid=%user.uid padre=%proc.pname
+        pod=%k8s.pod.name namespace=%k8s.ns.name imagen=%container.image.repository:%container.image.tag)
+      priority: WARNING
+      tags: [journal, container, process, mitre_execution]

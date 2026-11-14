@@ -1,0 +1,20 @@
+# Viola SOLO la política 4 (disallow-privilege-escalation): permite escalar privilegios.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bad-privilege-escalation
+  namespace: journal
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    seccompProfile: { type: RuntimeDefault }
+  containers:
+    - name: app
+      image: nginxinc/nginx-unprivileged:1.30.6-alpine3.24
+      securityContext:
+        allowPrivilegeEscalation: true
+      resources:
+        requests: { cpu: 10m, memory: 16Mi }
+        limits: { cpu: 50m, memory: 32Mi }
