@@ -1,0 +1,20 @@
+El Último Renglón quedó desplegado en el namespace {{ .Release.Namespace }}.
+
+Imágenes:
+  backend : {{ include "journal.image" .Values.backend.image }}
+  frontend: {{ include "journal.image" .Values.frontend.image }}
+
+Ver los pods:
+  kubectl get pods -n {{ .Release.Namespace }}
+
+Probar el despliegue:
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+Abrir la app:
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "journal.fullname" . }}-frontend 8080:{{ .Values.service.port }}
+  -> http://localhost:8080
+{{- if .Values.ingress.enabled }}
+
+Por Ingress (con "minikube tunnel" corriendo y "127.0.0.1 {{ .Values.ingress.host }}" en /etc/hosts):
+  http://{{ .Values.ingress.host }}
+{{- end }}

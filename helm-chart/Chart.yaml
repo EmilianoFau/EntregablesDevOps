@@ -1,0 +1,8 @@
+apiVersion: v2
+name: journal
+description: El Último Renglón — diario personal (frontend nginx + backend FastAPI)
+type: application
+# Versión del chart (cambia cuando cambian las plantillas).
+version: 1.0.0
+# Versión de la aplicación que despliega por defecto.
+appVersion: "3.0.0"

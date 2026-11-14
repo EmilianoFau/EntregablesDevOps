@@ -1,0 +1,70 @@
+# Valores base del chart. values-dev.yaml y values-prod.yaml pisan solo lo que cambia.
+# Instalación:  helm install journal ./helm-chart -n journal --create-namespace -f helm-chart/values-dev.yaml
+
+# Seguridad común a todos los pods (la exigen las políticas de Kyverno).
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+backend:
+  image:
+    repository: guilleacq/journal-backend
+    # El pipeline de Jenkins lo reemplaza por <build>-<commit> con --set.
+    tag: "dev"
+    pullPolicy: IfNotPresent
+  # Una sola réplica: cada pod guarda su propio JSON (limitación documentada).
+  replicas: 1
+  port: 8000
+  runAsUser: 100
+  runAsGroup: 101
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 192Mi }
+  config:
+    APP_VERSION: v3
+    DEPLOYMENT_COLOR: helm
+    JOURNAL_TIMEZONE: America/Montevideo
+    DATA_FILE: /app/data/entries.json
+
+frontend:
+  image:
+    repository: guilleacq/journal-frontend
+    tag: "dev"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8080
+  runAsUser: 101
+  runAsGroup: 101
+  resources:
+    requests: { cpu: 20m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 64Mi }
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  host: journal.local
+
+# Monitoreo con kube-prometheus-stack (Prometheus Operator).
+monitoring:
+  enabled: true
+  # Label que usa el Prometheus del operador para encontrar ServiceMonitors.
+  release: monitoring
+  scrapeInterval: 15s
+  alerts:
+    enabled: true
+    # Más de N escrituras en 5 minutos dispara la alerta MuchasOperaciones.
+    writesThreshold: 5
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1

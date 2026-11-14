@@ -1,0 +1,85 @@
+{{- $fullname := include "journal.fullname" . -}}
+{{- if .Values.ingress.enabled }}
+# Ingress: publica el frontend por nombre de host (addon ingress-nginx de Minikube).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "journal.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullname }}-frontend
+                port:
+                  name: http
+{{- end }}
+{{- if .Values.monitoring.enabled }}
+---
+# ServiceMonitor: le dice al Prometheus del operador que lea /metrics/ del backend.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $fullname }}-backend
+  labels:
+    {{- include "journal.labels" . | nindent 4 }}
+    release: {{ .Values.monitoring.release }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "journal.selectorLabels" (list . "backend") | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics/
+      interval: {{ .Values.monitoring.scrapeInterval }}
+{{- if .Values.monitoring.alerts.enabled }}
+---
+# PrometheusRule: la alerta de negocio que ya existía en el Lab 2.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullname }}-alerts
+  labels:
+    {{- include "journal.labels" . | nindent 4 }}
+    release: {{ .Values.monitoring.release }}
+spec:
+  groups:
+    - name: journal
+      rules:
+        - alert: MuchasOperaciones
+          expr: sum(increase(journal_entry_operations_total[5m])) > {{ .Values.monitoring.alerts.writesThreshold }}
+          labels:
+            severity: warning
+          annotations:
+            summary: Más de {{ .Values.monitoring.alerts.writesThreshold }} escrituras en 5 minutos
+        - alert: JournalErroresHTTP
+          expr: sum(rate(http_requests_total{status=~"5.."}[5m])) > 0.1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: El backend está respondiendo errores 5xx
+{{- end }}
+{{- end }}
+{{- if .Values.podDisruptionBudget.enabled }}
+---
+# PodDisruptionBudget: en mantenimientos del nodo, siempre queda un frontend vivo.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $fullname }}-frontend
+  labels:
+    {{- include "journal.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "journal.selectorLabels" (list . "frontend") | nindent 6 }}
+{{- end }}

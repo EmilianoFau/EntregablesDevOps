@@ -1,0 +1,31 @@
+# "helm test journal -n journal": pod efímero que verifica que el frontend
+# responde y que el proxy /api llega al backend. Cumple las políticas de Kyverno.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "journal.fullname" . }}-test
+  labels:
+    {{- include "journal.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    {{- toYaml .Values.podSecurityContext | nindent 4 }}
+    runAsUser: 100
+    runAsGroup: 101
+  containers:
+    - name: curl
+      image: curlimages/curl:8.23.0
+      command: ["sh", "-c"]
+      args:
+        - >-
+          curl -fsS http://{{ include "journal.fullname" . }}-frontend:{{ .Values.service.port }}/ -o /dev/null &&
+          curl -fsS http://{{ include "journal.fullname" . }}-frontend:{{ .Values.service.port }}/api/day
+      securityContext:
+        {{- toYaml .Values.containerSecurityContext | nindent 8 }}
+      resources:
+        requests: { cpu: 10m, memory: 16Mi }
+        limits: { cpu: 100m, memory: 32Mi }

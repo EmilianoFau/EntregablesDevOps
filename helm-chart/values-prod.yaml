@@ -1,0 +1,26 @@
+# Entorno de producción: frontend redundante, más recursos, PDB y siempre
+# descargar la imagen del registro (no confiar en una copia local).
+backend:
+  image:
+    pullPolicy: Always
+  # Sigue en 1: el almacenamiento JSON no se comparte entre pods.
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+  config:
+    DEPLOYMENT_COLOR: prod
+frontend:
+  image:
+    pullPolicy: Always
+  replicas: 2
+  resources:
+    requests: { cpu: 50m, memory: 32Mi }
+    limits: { cpu: 300m, memory: 96Mi }
+ingress:
+  host: journal.local
+monitoring:
+  scrapeInterval: 30s
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

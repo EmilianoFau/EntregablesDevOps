@@ -1,0 +1,10 @@
+# Entorno de desarrollo: una réplica de todo, recursos chicos, host de dev.
+backend:
+  config:
+    DEPLOYMENT_COLOR: dev
+frontend:
+  replicas: 1
+ingress:
+  host: journal.dev.local
+podDisruptionBudget:
+  enabled: false
