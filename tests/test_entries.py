@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from datetime import date
 from app.clock import journal_today
 from app.main import app
+from app.repository import get_repository
 
 
 ENTRY = {
@@ -99,3 +100,16 @@ def test_metrics_count_operations(client: TestClient) -> None:
     assert client.post("/api/entries", json=ENTRY).status_code == 201
     metrics = client.get("/metrics/").text
     assert 'journal_entry_operations_total{operation="create"}' in metrics
+
+
+def test_metrics_exposes_http_and_business_metrics(client: TestClient, monkeypatch) -> None:
+    repository = app.dependency_overrides[get_repository]()
+    monkeypatch.setattr("app.metrics.get_repository", lambda: repository)
+    client.post("/api/entries", json=ENTRY)
+    client.get("/api/entries")
+
+    body = client.get("/metrics/").text
+    assert 'http_requests_total{method="GET",route="/api/entries",status="200"}' in body
+    assert "http_request_duration_seconds_bucket" in body
+    assert 'journal_entries{mood="SERENO"} 1.0' in body
+    assert 'journal_entry_operations_total{operation="create"}' in body

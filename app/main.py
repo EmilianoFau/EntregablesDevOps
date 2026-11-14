@@ -1,11 +1,10 @@
-from pathlib import Path
 from datetime import date
 
 from fastapi import Depends, FastAPI
-from fastapi.responses import FileResponse
 from prometheus_client import make_asgi_app
 from app.config import get_settings
 from app.clock import journal_today
+from app.metrics import MetricsMiddleware, register_business_metrics
 from app.repository import JsonJournalRepository, get_repository
 from app.routes.entries import router as entries_router
 from app.schemas import Mood, VersionInfo
@@ -15,10 +14,11 @@ app = FastAPI(
     description="Un diario personal para cerrar el día con calma.",
     version="2.0.0",
 )
+# El frontend vive en su propio contenedor (nginx): esta app solo expone la API.
+app.add_middleware(MetricsMiddleware)
 app.include_router(entries_router)
 app.mount("/metrics", make_asgi_app())
-
-INDEX_FILE = Path(__file__).parent / "static" / "index.html"
+register_business_metrics()
 
 
 @app.get("/api/day", tags=["metadata"])
@@ -47,8 +47,3 @@ def ready(repository: JsonJournalRepository = Depends(get_repository)) -> dict[s
     if not repository.ready():
         raise RuntimeError("El archivo de datos no está disponible")
     return {"status": "ready"}
-
-
-@app.get("/", include_in_schema=False)
-def index() -> FileResponse:
-    return FileResponse(INDEX_FILE)
