@@ -1,0 +1,55 @@
+# Valores para kube-prometheus-stack (Prometheus Operator + Prometheus + Grafana
+# + kube-state-metrics). Ajustado para que entre en una Minikube de 6 GB.
+# helm install monitoring prometheus-community/kube-prometheus-stack -n monitoring --create-namespace -f monitoring/values.yaml
+
+# Componentes que no usamos o que en Minikube no se pueden scrapear.
+alertmanager:
+  enabled: false
+nodeExporter:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    # Tomar los ServiceMonitor y PrometheusRule de cualquier release, no solo
+    # los que tienen el label del propio chart.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    scrapeInterval: 15s
+    retention: 2d
+    resources:
+      requests: { cpu: 100m, memory: 400Mi }
+      limits: { cpu: "1", memory: 1Gi }
+
+grafana:
+  adminUser: admin
+  adminPassword: admin
+  # El sidecar busca ConfigMaps con el label grafana_dashboard=1 y los carga
+  # como dashboards. Así el dashboard queda versionado en el repo.
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+      folderAnnotation: grafana_folder
+      provider:
+        foldersFromFilesStructure: true
+  # En el primer arranque Grafana migra su base SQLite y tarda varios minutos
+  # con CPU limitada; si el liveness probe corta antes, entra en un loop de reinicios.
+  resources:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits: { cpu: "1", memory: 512Mi }
+  livenessProbe:
+    httpGet: { path: /api/health, port: 3000 }
+    initialDelaySeconds: 300
+    timeoutSeconds: 30
+    failureThreshold: 10
