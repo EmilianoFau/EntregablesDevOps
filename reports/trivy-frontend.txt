@@ -1,0 +1,15 @@
+# Trivy: imagen frontend
+# Generado: 2026-11-15 14:44:14 UTC · commit 51dce59
+
+
+Report Summary
+
+┌───────────────────────────────────────┬────────┬─────────────────┐
+│                Target                 │  Type  │ Vulnerabilities │
+├───────────────────────────────────────┼────────┼─────────────────┤
+│ journal-frontend:scan (alpine 3.24.2) │ alpine │        0        │
+└───────────────────────────────────────┴────────┴─────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+

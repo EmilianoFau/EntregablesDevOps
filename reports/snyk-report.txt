@@ -1,0 +1,91 @@
+# Snyk: dependencias Python (requirements.txt)
+# Generado: 2026-11-15 14:43:36 UTC · commit 51dce59
+
+Testing  (requirements.txt) ...
+
+Tested 17 dependencies for known issues, found 0 issues, 0 vulnerable paths.
+
+Open Security issues: 0
+
+╭───────────────────────────────────────────────────────╮
+│ Test Summary                                          │
+│                                                       │
+│   Organization:                                       │
+│   Test type:         Software Composition Analysis    │
+│   Project name:      w                                │
+│   Project path:      /tmp/w                           │
+│   Target file:       requirements.txt                 │
+│                                                       │
+│   Total security issues: 0                            │
+╰───────────────────────────────────────────────────────╯
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+(código de salida de snyk: 0)
+
+## Control: misma prueba agregando PyYAML==5.3 (lo que hace el pipeline con SIMULAR_DEPENDENCIA_VULNERABLE)
+Testing  (requirements.txt) ...
+
+Tested 18 dependencies for known issues, found 2 issues, 2 vulnerable paths.
+
+Open Security issues: 2
+
+ ✗ [CRITICAL] Arbitrary Code Execution
+   Finding ID: SNYK-PYTHON-PYYAML-559098
+   Info: https://snyk.io/vuln/SNYK-PYTHON-PYYAML-559098
+   Introduced by: pyyaml
+   Introduced through: w@0.0.0 > pyyaml@5.3
+
+ ✗ [CRITICAL] Arbitrary Code Execution
+   Finding ID: SNYK-PYTHON-PYYAML-590151
+   Info: https://snyk.io/vuln/SNYK-PYTHON-PYYAML-590151
+   Introduced by: pyyaml
+   Introduced through: w@0.0.0 > pyyaml@5.3
+
+Issues to fix by upgrading:
+
+  Upgrade pyyaml@5.3 to pyyaml@5.4 to fix
+  ✗ Arbitrary Code Execution [CRITICAL] [https://security.snyk.io/vuln/SNYK-PYTHON-PYYAML-559098] in pyyaml@5.3
+    introduced by w@0.0.0 > pyyaml@5.3
+  ✗ Arbitrary Code Execution [CRITICAL] [https://security.snyk.io/vuln/SNYK-PYTHON-PYYAML-590151] in pyyaml@5.3
+    introduced by w@0.0.0 > pyyaml@5.3
+
+╭─────────────────────────────────────────────────────────╮
+│ Test Summary                                            │
+│                                                         │
+│   Organization:                                         │
+│   Test type:         Software Composition Analysis      │
+│   Project name:      w                                  │
+│   Project path:      /tmp/w                             │
+│   Target file:       requirements.txt                   │
+│                                                         │
+│   Total security issues: 2                              │
+│   Ignored: 0 [ 0 CRITICAL  0 HIGH  0 MEDIUM  0 LOW ]    │
+│   Open   : 2 [ 2 CRITICAL  0 HIGH  0 MEDIUM  0 LOW ]    │
+╰─────────────────────────────────────────────────────────╯
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+(código de salida de snyk: 1)

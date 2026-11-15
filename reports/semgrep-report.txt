@@ -1,0 +1,94 @@
+# Semgrep: análisis estático de app/
+# Generado: 2026-11-15 14:43:29 UTC · commit 51dce59
+
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 10 files tracked by git with 156 Code rules:
+  Scanning 10 files with 156 python rules.
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 0 (0 blocking)
+ • Rules run: 156
+ • Targets scanned: 10
+ • Parsed lines: ~100.0%
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 156 rules on 10 files: 0 findings.
+(need more rules? `semgrep login` for additional free Semgrep Registry rules)
+
+If Semgrep missed a finding, please send us feedback to let us know!
+See https://semgrep.dev/docs/reporting-false-negatives/
+
+## Control: las reglas propias sobre un archivo con malas prácticas a propósito
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 1 file tracked by git with 5 Code rules:
+  Scanning 1 file with 5 python rules.
+                   
+                   
+┌─────────────────┐
+│ 8 Code Findings │
+└─────────────────┘
+                               
+    semgrep/ejemplo-inseguro.py
+   ❯❯❱ semgrep.python-eval-exec
+          ❰❰ Blocking ❱❱
+          eval/exec ejecutan texto como código. Si ese texto viene del usuario, es ejecución remota de código.
+                                                                                                              
+            5┆ eval(x)
+   
+   ❯❯❱ semgrep.python-subprocess-shell-true
+          ❰❰ Blocking ❱❱
+          subprocess con shell=True pasa el comando por /bin/sh y permite inyectar comandos. Usar una lista de
+          argumentos sin shell.                                                                               
+                                                                                                              
+            6┆ subprocess.run(cmd, shell=True)
+            ⋮┆----------------------------------------
+            7┆ os.system(cmd)
+   
+   ❯❯❱ semgrep.python-insecure-deserialization
+          ❰❰ Blocking ❱❱
+          pickle y yaml.load sin SafeLoader pueden ejecutar código al deserializar datos que no controlamos.
+          Usar json o yaml.safe_load.                                                                       
+                                                                                                            
+            8┆ pickle.loads(data)
+            ⋮┆----------------------------------------
+            9┆ yaml.load(s)
+   
+    ❯❱ semgrep.fastapi-cors-wildcard
+          ❰❰ Blocking ❱❱
+          CORS con allow_origins=["*"] deja que cualquier sitio llame a la API desde el navegador del usuario.
+                                                                                                              
+           10┆ app.add_middleware(CORSMiddleware, allow_origins=["*"])
+   
+    ❯❱ semgrep.journal-log-entry-content
+          ❰❰ Blocking ❱❱
+          No se debe registrar el texto de las entradas en los logs: es contenido privado del usuario (regla
+          de privacidad propia del proyecto).                                                               
+                                                                                                            
+           11┆ logging.info("guardé %s", entry.content)
+            ⋮┆----------------------------------------
+           12┆ print(payload.content)
+
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 8 (8 blocking)
+ • Rules run: 5
+ • Targets scanned: 1
+ • Parsed lines: ~100.0%
+ • No ignore information available
+Ran 5 rules on 1 file: 8 findings.
