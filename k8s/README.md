@@ -1,5 +1,7 @@
 # Blue/green en Minikube
 
+> Este documento corresponde a los Labs 2 y 3 y se conserva como historia del proyecto. El despliegue del Lab 4 se hace con el Helm chart (`helm-chart/`) y los scripts de `scripts/`; ver el [README principal](../README.md) y el [paso a paso](../docs/paso-a-paso.md).
+
 El ejemplo usa solamente dos manifiestos:
 
 - `config.yaml`: configuración compartida por las dos versiones.
@@ -125,13 +127,13 @@ Si la imagen `journal:v2` es anterior a este cambio, hay que reconstruirla dentr
 helm repo add kyverno https://kyverno.github.io/kyverno
 helm install kyverno kyverno/kyverno -n kyverno --create-namespace
 kubectl apply -f k8s/policies/
-kubectl get clusterpolicy
+kubectl get validatingpolicy
 ```
 
-Tres políticas en modo Enforce: sin etiqueta `latest`, `requests`/`limits` obligatorios y nada de root. Para comprobar que funcionan, este manifiesto no conforme debe ser **rechazado**:
+En el Lab 3 eran tres `ClusterPolicy`. En el Lab 4 se sumó una cuarta (sin escalada de privilegios) y las cuatro se reescribieron como `ValidatingPolicy`, porque Kyverno 1.20 ya no acepta el formato anterior. Para comprobar que funcionan, este manifiesto no conforme debe ser **rechazado** (`scripts/kyverno-validate.sh` prueba cada política por separado):
 
 ```bash
-kubectl apply -f k8s/policies/test/noncompliant-pod.yaml
+kubectl apply -f k8s/policies/test/noncompliant-all.yaml
 ```
 
 ### KubeLinter
