@@ -28,6 +28,9 @@ pipeline {
         NAMESPACE      = 'journal'
         RELEASE        = 'journal'
         TRIVY_CACHE    = "${env.JENKINS_HOME}/.cache/trivy"
+        // En la primera corrida de un job nuevo Jenkins todavía no conoce los
+        // parámetros (están en este archivo), así que se usa dev por defecto.
+        HELM_ENV       = "${params.ENTORNO ?: 'dev'}"
     }
 
     stages {
@@ -153,7 +156,7 @@ pipeline {
                 sh '''
                     helm upgrade --install $RELEASE ./helm-chart \
                         --namespace $NAMESPACE --create-namespace \
-                        -f helm-chart/values-$ENTORNO.yaml \
+                        -f helm-chart/values-$HELM_ENV.yaml \
                         --set backend.image.repository=$BACKEND_IMAGE \
                         --set frontend.image.repository=$FRONTEND_IMAGE \
                         --set backend.image.tag=$TAG \
