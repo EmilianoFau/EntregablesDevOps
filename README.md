@@ -300,6 +300,8 @@ El log completo con la descripción del evento está en [`reports/falco-event.lo
 
 **Grafana entraba en un loop de reinicios.** En el primer arranque Grafana migra su base de datos SQLite, y con el límite de CPU que le habíamos puesto tardaba más que el tiempo que le daba el liveness probe. Kubernetes lo mataba antes de que terminara y volvía a empezar. Subimos el límite de CPU a 1 núcleo y le dimos 5 minutos de margen al probe.
 
+**Minikube se quedó sin memoria.** Veníamos usando el mismo perfil de Minikube desde los primeros labs, creado con 4 GB. Con Kyverno, el stack de monitoreo, Falco y la app adentro llegó al 100 % de memoria, y en el build 4 el webhook de Kyverno no respondió a tiempo, así que Kubernetes rechazó el deploy. El parámetro `--memory` solo se aplica al crear el cluster, por eso no alcanzaba con cambiarlo en el script. Recreamos Minikube con 6 GB y corrimos el setup desde cero, lo que además sirvió para comprobar que el script levanta todo en un cluster vacío.
+
 **El CPU por pod salía vacío.** En este Minikube, cAdvisor publica el consumo a nivel pod, sin la etiqueta `container`, y nuestras consultas filtraban por `container!=""`. Cambiamos el filtro a `container="", pod!=""`, que toma el total del pod y además evita sumar dos veces lo mismo.
 
 **La regla de fábrica de archivos sensibles no se disparaba.** En el Lab 3, leer `/etc/shadow` disparaba "Sensitive file opened for reading". En la versión actual esa regla solo salta si la apertura tiene éxito, y nuestro contenedor no es root, así que el kernel la niega. Lo resolvimos con la regla propia y una segunda acción que dispara otra regla de fábrica.
