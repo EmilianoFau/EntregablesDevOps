@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" width="1400" height="860" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t { font-size: 15px; fill: #0f172a; text-anchor: middle; dominant-baseline: middle; }
+      .s { font-size: 12px; fill: #475569; text-anchor: middle; dominant-baseline: middle; }
+      .h { font-size: 15px; font-weight: 700; fill: #334155; }
+      .lbl { font-size: 12.5px; fill: #334155; }
+      .line { stroke: #475569; stroke-width: 1.8; fill: none; }
+      .dash { stroke: #475569; stroke-width: 1.8; fill: none; stroke-dasharray: 6 5; }
+      .ci  { fill: #e0f2fe; stroke: #0284c7; stroke-width: 2; }
+      .sec { fill: #fee2e2; stroke: #dc2626; stroke-width: 2; }
+      .app { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; }
+      .mon { fill: #ffedd5; stroke: #ea580c; stroke-width: 2; }
+      .sto { fill: #ede9fe; stroke: #7c3aed; stroke-width: 2; }
+      .ppl { fill: #fef3c7; stroke: #d97706; stroke-width: 2; }
+      .grp { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; }
+      .ns  { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="860" fill="#ffffff"/>
+  <text x="700" y="38" class="t" style="font-size:22px;font-weight:700">El Último Renglón · arquitectura del Lab 4</text>
+
+  <!-- Equipo y GitHub -->
+  <rect x="20" y="95" width="140" height="46" rx="23" class="ppl"/>
+  <text x="90" y="118" class="t">Equipo</text>
+  <path d="M90,141 L90,176" class="line" marker-end="url(#a)"/>
+  <text x="98" y="160" class="lbl">git push</text>
+  <rect x="20" y="180" width="140" height="60" rx="10" class="sto"/>
+  <text x="90" y="202" class="t">GitHub</text>
+  <text x="90" y="223" class="s">rama entrega4</text>
+  <path d="M160,210 L188,210" class="line" marker-end="url(#a)"/>
+
+  <!-- Jenkins -->
+  <rect x="190" y="80" width="1020" height="175" rx="14" class="grp"/>
+  <text x="210" y="108" class="h">Jenkins · pipeline CI/CD (Jenkinsfile)</text>
+  <g>
+    <rect x="210" y="150" width="100" height="56" rx="8" class="ci"/>  <text x="260" y="168" class="s">1</text><text x="260" y="188" class="t">Clonación</text>
+    <rect x="322" y="150" width="100" height="56" rx="8" class="sec"/> <text x="372" y="168" class="s">2</text><text x="372" y="188" class="t">Semgrep</text>
+    <rect x="434" y="150" width="100" height="56" rx="8" class="sec"/> <text x="484" y="168" class="s">3</text><text x="484" y="188" class="t">Snyk</text>
+    <rect x="546" y="150" width="100" height="56" rx="8" class="ci"/>  <text x="596" y="168" class="s">4</text><text x="596" y="188" class="t">Tests</text>
+    <rect x="658" y="150" width="100" height="56" rx="8" class="ci"/>  <text x="708" y="168" class="s">5</text><text x="708" y="188" class="t">Build</text>
+    <rect x="770" y="150" width="100" height="56" rx="8" class="sec"/> <text x="820" y="168" class="s">6</text><text x="820" y="188" class="t">Trivy</text>
+    <rect x="882" y="150" width="100" height="56" rx="8" class="ci"/>  <text x="932" y="168" class="s">7</text><text x="932" y="188" class="t">Push</text>
+    <rect x="994" y="150" width="100" height="56" rx="8" class="ci"/>  <text x="1044" y="168" class="s">8</text><text x="1044" y="188" class="t">Helm</text>
+    <rect x="1106" y="150" width="90" height="56" rx="8" class="ci"/>  <text x="1151" y="168" class="s">9</text><text x="1151" y="188" class="t">helm test</text>
+    <path d="M310,178 L320,178 M422,178 L432,178 M534,178 L544,178 M646,178 L656,178 M758,178 L768,178 M870,178 L880,178 M982,178 L992,178 M1094,178 L1104,178" class="line"/>
+  </g>
+  <text x="700" y="235" class="s">Se corta si Semgrep encuentra un ERROR, Snyk o Trivy una vulnerabilidad CRITICAL, falla un test o el despliegue no levanta</text>
+
+  <!-- Docker Hub -->
+  <path d="M932,206 L932,286" class="line" marker-end="url(#a)"/>
+  <text x="940" y="270" class="lbl">publica</text>
+  <rect x="822" y="290" width="220" height="62" rx="10" class="sto"/>
+  <text x="932" y="312" class="t">Docker Hub</text>
+  <text x="932" y="333" class="s">journal-backend · journal-frontend</text>
+
+  <!-- Kubernetes -->
+  <rect x="20" y="390" width="1360" height="450" rx="16" class="grp"/>
+  <text x="40" y="418" class="h">Kubernetes · Minikube</text>
+
+  <!-- Kyverno -->
+  <path d="M1044,206 C1044,300 1150,330 1150,424" class="line" marker-end="url(#a)"/>
+  <text x="1105" y="300" class="lbl">helm upgrade --wait</text>
+  <polygon points="1030,428 1270,428 1290,456 1270,484 1030,484 1010,456" class="sec"/>
+  <text x="1150" y="447" class="t">Kyverno</text>
+  <text x="1150" y="468" class="s">admite o rechaza cada pod (4 políticas)</text>
+  <path d="M1150,484 L1150,518" class="line" marker-end="url(#a)"/>
+
+  <!-- namespace journal -->
+  <rect x="400" y="520" width="940" height="140" rx="12" class="ns"/>
+  <text x="416" y="542" class="lbl" style="font-weight:700">namespace journal · Helm chart</text>
+  <path d="M932,352 L932,516" class="dash" marker-end="url(#a)"/>
+  <text x="940" y="500" class="lbl">pull</text>
+
+  <rect x="430" y="565" width="150" height="66" rx="10" class="app"/>
+  <text x="505" y="588" class="t">Ingress</text>
+  <text x="505" y="610" class="s">journal.dev.local</text>
+  <rect x="640" y="565" width="170" height="66" rx="10" class="app"/>
+  <text x="725" y="588" class="t">frontend · nginx</text>
+  <text x="725" y="610" class="s">UID 101 · puerto 8080</text>
+  <rect x="880" y="565" width="190" height="66" rx="10" class="app"/>
+  <text x="975" y="588" class="t">backend · FastAPI</text>
+  <text x="975" y="610" class="s">UID 100 · /api · /metrics</text>
+  <rect x="1130" y="565" width="180" height="66" rx="10" class="sto"/>
+  <text x="1220" y="588" class="t">entries.json</text>
+  <text x="1220" y="610" class="s">volumen emptyDir</text>
+  <path d="M580,598 L636,598" class="line" marker-end="url(#a)"/>
+  <path d="M810,598 L876,598" class="line" marker-end="url(#a)"/>
+  <text x="843" y="588" class="lbl" text-anchor="middle">/api</text>
+  <path d="M1070,598 L1126,598" class="line" marker-end="url(#a)"/>
+
+  <!-- Usuario -->
+  <rect x="50" y="575" width="140" height="46" rx="23" class="ppl"/>
+  <text x="120" y="598" class="t">Usuario</text>
+  <path d="M190,598 L426,598" class="line" marker-end="url(#a)"/>
+  <text x="300" y="588" class="lbl" text-anchor="middle">navegador</text>
+
+  <!-- monitoring -->
+  <rect x="400" y="690" width="540" height="132" rx="12" class="ns"/>
+  <text x="416" y="806" class="lbl" style="font-weight:700">namespace monitoring · kube-prometheus-stack</text>
+  <rect x="430" y="722" width="190" height="62" rx="10" class="mon"/>
+  <text x="525" y="744" class="t">Prometheus</text>
+  <text x="525" y="765" class="s">ServiceMonitor · alertas</text>
+  <rect x="700" y="722" width="210" height="62" rx="10" class="mon"/>
+  <text x="805" y="744" class="t">Grafana</text>
+  <text x="805" y="765" class="s">dashboard.json</text>
+  <path d="M620,753 L696,753" class="line" marker-end="url(#a)"/>
+  <path d="M560,722 C600,680 930,690 945,635" class="line" marker-end="url(#a)"/>
+  <text x="700" y="672" class="lbl">scrape cada 15 s</text>
+
+  <!-- falco -->
+  <rect x="970" y="690" width="370" height="132" rx="12" class="ns"/>
+  <text x="986" y="806" class="lbl" style="font-weight:700">namespace falco</text>
+  <polygon points="1020,722 1270,722 1290,753 1270,784 1020,784 1000,753" class="sec"/>
+  <text x="1145" y="744" class="t">Falco · eBPF</text>
+  <text x="1145" y="765" class="s">vigila las syscalls en ejecución</text>
+  <path d="M1080,722 C1060,690 1010,680 1005,635" class="dash" marker-end="url(#a)"/>
+
+  <!-- Leyenda -->
+  <text x="44" y="712" class="lbl" style="font-weight:700">Referencias</text>
+  <rect x="44" y="725" width="18" height="14" rx="3" class="ci"/>  <text x="70" y="733" class="lbl" dominant-baseline="middle">integración y entrega</text>
+  <rect x="44" y="747" width="18" height="14" rx="3" class="sec"/> <text x="70" y="755" class="lbl" dominant-baseline="middle">controles de seguridad</text>
+  <rect x="44" y="769" width="18" height="14" rx="3" class="app"/> <text x="70" y="777" class="lbl" dominant-baseline="middle">aplicación</text>
+  <rect x="210" y="725" width="18" height="14" rx="3" class="mon"/> <text x="236" y="733" class="lbl" dominant-baseline="middle">observabilidad</text>
+  <rect x="210" y="747" width="18" height="14" rx="3" class="sto"/> <text x="236" y="755" class="lbl" dominant-baseline="middle">repositorios y datos</text>
+  <path d="M210,777 L240,777" class="dash"/> <text x="248" y="777" class="lbl" dominant-baseline="middle">relación indirecta</text>
+</svg>

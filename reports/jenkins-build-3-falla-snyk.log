@@ -1,0 +1,216 @@
+Started by user admin
+Obtained Jenkinsfile from git https://github.com/EmilianoFau/EntregablesDevOps.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/journal-pipeline
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timestamps
+[Pipeline] {
+[Pipeline] ansiColor
+[Pipeline] {
+[2026-11-15T14:41:20.805Z] 
+[Pipeline] stage
+[Pipeline] { (1. Clonación del repositorio)
+[Pipeline] checkout
+[2026-11-15T14:41:20.835Z] Selected Git installation does not exist. Using Default
+[2026-11-15T14:41:20.835Z] The recommended git tool is: NONE
+[2026-11-15T14:41:20.835Z] No credentials specified
+[2026-11-15T14:41:20.835Z]  > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/journal-pipeline/.git # timeout=10
+[2026-11-15T14:41:20.838Z] Fetching changes from the remote Git repository
+[2026-11-15T14:41:20.839Z]  > git config remote.origin.url https://github.com/EmilianoFau/EntregablesDevOps.git # timeout=10
+[2026-11-15T14:41:20.842Z] Fetching upstream changes from https://github.com/EmilianoFau/EntregablesDevOps.git
+[2026-11-15T14:41:20.842Z]  > git --version # timeout=10
+[2026-11-15T14:41:20.844Z]  > git --version # 'git version 2.47.3'
+[2026-11-15T14:41:20.844Z]  > git fetch --tags --force --progress -- https://github.com/EmilianoFau/EntregablesDevOps.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+[2026-11-15T14:41:21.379Z]  > git rev-parse refs/remotes/origin/entrega4^{commit} # timeout=10
+[2026-11-15T14:41:21.382Z] Checking out Revision 6f628f84a9d993c7708e1c119f284310bc3e2b20 (refs/remotes/origin/entrega4)
+[2026-11-15T14:41:21.382Z]  > git config core.sparsecheckout # timeout=10
+[2026-11-15T14:41:21.385Z]  > git checkout -f 6f628f84a9d993c7708e1c119f284310bc3e2b20 # timeout=10
+[2026-11-15T14:41:21.392Z] Commit message: "Corrige el CVE crítico del frontend que frenó al pipeline"
+[2026-11-15T14:41:21.392Z]  > git rev-list --no-walk 6f628f84a9d993c7708e1c119f284310bc3e2b20 # timeout=10
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
+[2026-11-15T14:41:21.685Z] + git rev-parse --short HEAD
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
+[2026-11-15T14:41:21.976Z] + mkdir -p reports
+[2026-11-15T14:41:21.976Z] + git log -1 --format=Commit %h · %an · %s
+[2026-11-15T14:41:21.976Z] Commit 6f628f8 · Guillermo Acquistapace · Corrige el CVE crítico del frontend que frenó al pipeline
+[Pipeline] echo
+[2026-11-15T14:41:21.989Z] Las imágenes de este build se etiquetan como 3-6f628f8
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (2. Análisis estático (Semgrep))
+[Pipeline] sh
+[2026-11-15T14:41:22.272Z] + semgrep scan --metrics=off --config semgrep/rules.yaml --config p/python --exclude tests --text --output reports/semgrep-report.txt app/
+[2026-11-15T14:41:24.136Z]                
+[2026-11-15T14:41:24.136Z]                
+[2026-11-15T14:41:24.136Z] ┌─────────────┐
+[2026-11-15T14:41:24.136Z] │ Scan Status │
+[2026-11-15T14:41:24.136Z] └─────────────┘
+[2026-11-15T14:41:24.136Z]   Scanning 10 files tracked by git with 156 Code rules:
+[2026-11-15T14:41:24.136Z]   Scanning 10 files with 156 python rules.
+[2026-11-15T14:41:24.136Z]                 
+[2026-11-15T14:41:24.136Z]                 
+[2026-11-15T14:41:24.136Z] ┌──────────────┐
+[2026-11-15T14:41:24.136Z] │ Scan Summary │
+[2026-11-15T14:41:24.136Z] └──────────────┘
+[2026-11-15T14:41:24.136Z] ✅ Scan completed successfully.
+[2026-11-15T14:41:24.136Z]  • Findings: 0 (0 blocking)
+[2026-11-15T14:41:24.136Z]  • Rules run: 156
+[2026-11-15T14:41:24.136Z]  • Targets scanned: 10
+[2026-11-15T14:41:24.136Z]  • Parsed lines: ~100.0%
+[2026-11-15T14:41:24.136Z]  • Scan was limited to files tracked by git
+[2026-11-15T14:41:24.136Z]  • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+[2026-11-15T14:41:24.136Z] Ran 156 rules on 10 files: 0 findings.
+[2026-11-15T14:41:24.136Z] (need more rules? `semgrep login` for additional free Semgrep Registry rules)
+[2026-11-15T14:41:24.136Z] 
+[2026-11-15T14:41:24.136Z] If Semgrep missed a finding, please send us feedback to let us know!
+[2026-11-15T14:41:24.136Z] See https://semgrep.dev/docs/reporting-false-negatives/
+[2026-11-15T14:41:24.387Z] + cat reports/semgrep-report.txt
+[2026-11-15T14:41:24.387Z] + semgrep scan --metrics=off --config semgrep/rules.yaml --config p/python --exclude tests --severity ERROR --error --quiet app/
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (3. Dependencias (Snyk))
+[Pipeline] withCredentials
+[2026-11-15T14:41:26.311Z] Masking supported pattern matches of $SNYK_TOKEN
+[Pipeline] {
+[Pipeline] sh
+[2026-11-15T14:41:26.580Z] + cp requirements.txt /tmp/requirements-snyk.txt
+[2026-11-15T14:41:26.580Z] + [ true = true ]
+[2026-11-15T14:41:26.580Z] + echo >> Simulación: se agrega PyYAML==5.3 (vulnerabilidad crítica conocida)
+[2026-11-15T14:41:26.580Z] >> Simulación: se agrega PyYAML==5.3 (vulnerabilidad crítica conocida)
+[2026-11-15T14:41:26.580Z] + echo PyYAML==5.3
+[2026-11-15T14:41:26.580Z] + python3 -m venv .snyk-venv
+[2026-11-15T14:41:27.496Z] + .snyk-venv/bin/pip install -q -r /tmp/requirements-snyk.txt
+[2026-11-15T14:41:28.840Z] + cp /tmp/requirements-snyk.txt requirements-snyk.txt
+[2026-11-15T14:41:28.840Z] + set +e
+[2026-11-15T14:41:28.840Z] + snyk test --file=requirements-snyk.txt --package-manager=pip --command=.snyk-venv/bin/python --skip-unresolved --severity-threshold=critical
+[2026-11-15T14:41:40.948Z] + status=1
+[2026-11-15T14:41:40.948Z] + set -e
+[2026-11-15T14:41:40.948Z] + cat reports/snyk-report.txt
+[2026-11-15T14:41:40.948Z] Testing  (requirements-snyk.txt) ...
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] Tested 18 dependencies for known issues, found 2 issues, 2 vulnerable paths.
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] Open Security issues: 2
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z]  ✗ [CRITICAL] Arbitrary Code Execution
+[2026-11-15T14:41:40.948Z]    Finding ID: SNYK-PYTHON-PYYAML-559098
+[2026-11-15T14:41:40.948Z]    Info: https://snyk.io/vuln/SNYK-PYTHON-PYYAML-559098
+[2026-11-15T14:41:40.948Z]    Introduced by: pyyaml
+[2026-11-15T14:41:40.948Z]    Introduced through: journal-pipeline@0.0.0 > pyyaml@5.3
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z]  ✗ [CRITICAL] Arbitrary Code Execution
+[2026-11-15T14:41:40.948Z]    Finding ID: SNYK-PYTHON-PYYAML-590151
+[2026-11-15T14:41:40.948Z]    Info: https://snyk.io/vuln/SNYK-PYTHON-PYYAML-590151
+[2026-11-15T14:41:40.948Z]    Introduced by: pyyaml
+[2026-11-15T14:41:40.948Z]    Introduced through: journal-pipeline@0.0.0 > pyyaml@5.3
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] Issues to fix by upgrading:
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z]   Upgrade pyyaml@5.3 to pyyaml@5.4 to fix
+[2026-11-15T14:41:40.948Z]   ✗ Arbitrary Code Execution [CRITICAL] [https://security.snyk.io/vuln/SNYK-PYTHON-PYYAML-559098] in pyyaml@5.3
+[2026-11-15T14:41:40.948Z]     introduced by journal-pipeline@0.0.0 > pyyaml@5.3
+[2026-11-15T14:41:40.948Z]   ✗ Arbitrary Code Execution [CRITICAL] [https://security.snyk.io/vuln/SNYK-PYTHON-PYYAML-590151] in pyyaml@5.3
+[2026-11-15T14:41:40.948Z]     introduced by journal-pipeline@0.0.0 > pyyaml@5.3
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] ╭──────────────────────────────────────────────────────────────────────╮
+[2026-11-15T14:41:40.948Z] │ Test Summary                                                         │
+[2026-11-15T14:41:40.948Z] │                                                                      │
+[2026-11-15T14:41:40.948Z] │   Organization:                                                      │
+[2026-11-15T14:41:40.948Z] │   Test type:         Software Composition Analysis                   │
+[2026-11-15T14:41:40.948Z] │   Project name:      journal-pipeline                                │
+[2026-11-15T14:41:40.948Z] │   Project path:      /var/jenkins_home/workspace/journal-pipeline    │
+[2026-11-15T14:41:40.948Z] │   Target file:       requirements-snyk.txt                           │
+[2026-11-15T14:41:40.948Z] │                                                                      │
+[2026-11-15T14:41:40.948Z] │   Total security issues: 2                                           │
+[2026-11-15T14:41:40.948Z] │   Ignored: 0 [ 0 CRITICAL  0 HIGH  0 MEDIUM  0 LOW ]                 │
+[2026-11-15T14:41:40.948Z] │   Open   : 2 [ 2 CRITICAL  0 HIGH  0 MEDIUM  0 LOW ]                 │
+[2026-11-15T14:41:40.948Z] ╰──────────────────────────────────────────────────────────────────────╯
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] 💡 Tip
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z]    You are currently viewing results with --severity-threshold applied.
+[2026-11-15T14:41:40.948Z]    To view all issues, remove the --severity-threshold flag            
+[2026-11-15T14:41:40.948Z]                                                                        
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] 💡 Tip
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z]    To view ignored issues, use the --include-ignores option.
+[2026-11-15T14:41:40.948Z]                                                             
+[2026-11-15T14:41:40.948Z] 
+[2026-11-15T14:41:40.948Z] + rm -f requirements-snyk.txt
+[2026-11-15T14:41:40.948Z] + [ 1 -eq 1 ]
+[2026-11-15T14:41:40.948Z] + echo PIPELINE DETENIDO: Snyk encontró vulnerabilidades CRÍTICAS en las dependencias
+[2026-11-15T14:41:40.948Z] PIPELINE DETENIDO: Snyk encontró vulnerabilidades CRÍTICAS en las dependencias
+[2026-11-15T14:41:40.948Z] + exit 1
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (4. Build y tests)
+Stage "4. Build y tests" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (5. Construcción de imágenes)
+Stage "5. Construcción de imágenes" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (6. Escaneo de imágenes (Trivy))
+Stage "6. Escaneo de imágenes (Trivy)" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (7. Publicación en Docker Hub)
+Stage "7. Publicación en Docker Hub" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (8. Despliegue en Kubernetes (Helm))
+Stage "8. Despliegue en Kubernetes (Helm)" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (9. Prueba de humo)
+Stage "9. Prueba de humo" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] archiveArtifacts
+[2026-11-15T14:41:41.303Z] Archiving artifacts
+[Pipeline] sh
+[2026-11-15T14:41:41.624Z] + docker image prune -f
+[Pipeline] echo
+[2026-11-15T14:41:41.637Z] PIPELINE DETENIDO. La etapa que falló aparece en rojo en la vista del pipeline; los reportes quedaron archivados.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[2026-11-15T14:41:41.673Z] 
+[Pipeline] // ansiColor
+[Pipeline] }
+[Pipeline] // timestamps
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE
