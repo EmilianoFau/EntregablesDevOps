@@ -1,5 +1,5 @@
 # Falco: detección en tiempo de ejecución
-# Generado: 2026-11-15 14:36:55 UTC
+# Generado: 2026-11-15 15:34:25 UTC
 # Instalación: helm install falco falcosecurity/falco --version 9.2.2 -n falco -f falco/values.yaml
 #
 # Acciones ejecutadas (ninguna abre una shell ni una terminal interactiva):
@@ -22,7 +22,7 @@ command terminated with exit code 1
 #      fábrica 'Unexpected connection to K8s API Server from container'.
 #
 # Alertas registradas:
-#   kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -E 'Sensitive file|Proceso inesperado'
+#   kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -E 'Proceso inesperado|K8s API Server'
 
-14:36:46.041040329: Warning Proceso inesperado en el backend del diario (comando=cat /etc/shadow usuario_uid=100 padre=containerd-shim pod=journal-backend-6b999c97bb-hs8zc namespace=journal imagen=guilleacq/journal-backend:dev) container_id=342936f8cb3b container_name=k8s_backend_journal-backend-6b999c97bb-hs8zc_journal_5cf4c33a-2551-4407-b66e-f2a66494ecf2_0 container_image_repository=guilleacq/journal-backend container_image_tag=dev k8s_pod_name=journal-backend-6b999c97bb-hs8zc k8s_ns_name=journal
-14:36:47.472895788: Notice Unexpected connection to K8s API Server from container | connection=10.244.0.101:36608->10.96.0.1:443 lport=443 rport=36608 fd_type=ipv4 fd_proto=tcp evt_type=connect user=<NA> user_uid=100 user_loginuid=-1 process=python proc_exepath=/usr/local/bin/python3.13 parent=containerd-shim command=python -c import socket; socket.create_connection(('kubernetes.default.svc', 443), 3); print('conexión abierta con el API server') terminal=0 container_id=342936f8cb3b container_name=k8s_backend_journal-backend-6b999c97bb-hs8zc_journal_5cf4c33a-2551-4407-b66e-f2a66494ecf2_0 container_image_repository=guilleacq/journal-backend container_image_tag=dev k8s_pod_name=journal-backend-6b999c97bb-hs8zc k8s_ns_name=journal
+15:34:17.270201441: Warning Proceso inesperado en el backend del diario (comando=cat /etc/shadow usuario_uid=100 padre=containerd-shim pod=journal-backend-5697f6cc7d-w5rsx namespace=journal imagen=guilleacq/journal-backend:1-9769dcf) container_id=41cf90eae807 container_name=k8s_backend_journal-backend-5697f6cc7d-w5rsx_journal_34e791ef-db35-416f-b36a-73b2ffb4cef1_0 container_image_repository=guilleacq/journal-backend container_image_tag=1-9769dcf k8s_pod_name=journal-backend-5697f6cc7d-w5rsx k8s_ns_name=journal
+15:34:17.573836150: Notice Unexpected connection to K8s API Server from container | connection=10.244.0.23:57162->10.96.0.1:443 lport=443 rport=57162 fd_type=ipv4 fd_proto=tcp evt_type=connect user=<NA> user_uid=100 user_loginuid=-1 process=python proc_exepath=/usr/local/bin/python3.13 parent=containerd-shim command=python -c import socket; socket.create_connection(('kubernetes.default.svc', 443), 3); print('conexión abierta con el API server') terminal=0 container_id=41cf90eae807 container_name=k8s_backend_journal-backend-5697f6cc7d-w5rsx_journal_34e791ef-db35-416f-b36a-73b2ffb4cef1_0 container_image_repository=guilleacq/journal-backend container_image_tag=1-9769dcf k8s_pod_name=journal-backend-5697f6cc7d-w5rsx k8s_ns_name=journal
