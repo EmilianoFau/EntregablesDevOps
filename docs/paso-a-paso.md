@@ -1,14 +1,18 @@
 # Paso a paso
 
-Esta guía recorre el proyecto desde una máquina limpia hasta tener todo corriendo, con los comandos en orden y lo que se debería ver en cada paso. Las salidas son las que obtuvimos nosotros en una Mac con chip M2 y Docker Desktop. Algunos nombres de pods, horas y hashes van a cambiar en cada corrida.
+Esta guía recorre el proyecto desde una máquina limpia hasta tener todo corriendo, con los comandos en orden y lo que se debería ver en cada paso. Las salidas son las que obtuvimos nosotros en una Mac con chip M2 y Docker Desktop, así que algunos nombres de pods, horas y hashes van a cambiar en cada corrida.
 
 ## 0. Requisitos
 
-- Docker Desktop con al menos 8 GB de memoria asignados (Settings → Resources). Minikube usa 6 GB y Jenkins necesita un poco más aparte.
-- Minikube, kubectl y Helm. En macOS: `brew install minikube kubectl helm`.
+- Docker Desktop con al menos 8 GB de memoria asignados (en Settings → Resources), ya que Minikube usa 6 GB y Jenkins necesita un poco más aparte.
+- Minikube, kubectl y Helm. En macOS se instalan con el comando de abajo.
 - Una cuenta de Snyk (alcanza con el plan gratis) y un token de acceso de Docker Hub con permiso de lectura y escritura.
 
-En la raíz del repositorio hay que crear el archivo `.env.lab4`, que está en `.gitignore` y nunca se sube:
+```bash
+brew install minikube kubectl helm
+```
+
+En la raíz del repositorio hay que crear el archivo .env.lab4, que está en el .gitignore y nunca se sube:
 
 ```bash
 SNYK_TOKEN=<token de Snyk: Account settings → Auth Token>
@@ -18,7 +22,7 @@ DOCKERHUB_TOKEN=<token de Docker Hub: Account settings → Personal access token
 
 ## 1. Probar la app en local con Docker Compose
 
-Antes de ir a Kubernetes conviene ver que las dos imágenes funcionan juntas.
+Antes de ir a Kubernetes conviene ver que las dos imágenes funcionan juntas. Primero corremos los tests dentro de Docker:
 
 ```bash
 docker build --target test -t journal-backend:test .
@@ -29,6 +33,8 @@ docker run --rm journal-backend:test
 ............                                                             [100%]
 12 passed, 1 warning in 0.11s
 ```
+
+Después levantamos los dos contenedores y comprobamos que responden y que ninguno corre como root:
 
 ```bash
 docker compose up -d --build
@@ -44,7 +50,7 @@ uid=100(journal) gid=101(journal) groups=101(journal)
 uid=101(nginx) gid=101(nginx) groups=101(nginx)
 ```
 
-La app queda en <http://localhost:8080>. La API directa y su documentación están en <http://localhost:8000/docs>.
+La app queda en <http://localhost:8080>, y la API directa con su documentación queda en <http://localhost:8000/docs>.
 
 ## 2. Levantar el cluster con todo instalado
 
@@ -52,18 +58,18 @@ La app queda en <http://localhost:8080>. La API directa y su documentación est�
 scripts/setup.sh
 ```
 
-El script hace ocho pasos y avisa en cada uno:
+El script hace ocho pasos y avisa cuando termina cada uno:
 
-1. Arranca Minikube con 4 CPU y 6 GB y habilita los addons `ingress` y `metrics-server`.
+1. Arranca Minikube con 4 CPU y 6 GB y habilita los addons ingress y metrics-server.
 2. Agrega los repositorios de Helm de Kyverno, Prometheus y Falco.
 3. Instala Kyverno 1.20 (chart 3.10.0).
 4. Instala kube-prometheus-stack 93.3.0, que trae el Prometheus Operator, Prometheus, Grafana y kube-state-metrics.
 5. Instala Falco 0.45.2 (chart 9.2.2) con nuestra regla propia.
 6. Aplica las 4 políticas de Kyverno y carga el dashboard en Grafana.
-7. Construye las imágenes de la app dentro de Minikube con la etiqueta `dev`.
-8. Despliega la app con Helm y corre `helm test`.
+7. Construye las imágenes de la app dentro de Minikube con la etiqueta dev.
+8. Despliega la app con Helm y corre helm test.
 
-La primera vez tarda entre 10 y 15 minutos, casi todo descargando imágenes. Si se vuelve a correr, saltea los operadores que ya están instalados.
+La primera vez tarda entre 10 y 15 minutos, casi todo en descargar imágenes. Si se vuelve a correr, saltea los operadores que ya están instalados.
 
 Al final se ve algo así:
 
@@ -79,7 +85,7 @@ POD LOGS: journal-test (curl)
   ✓ La app responde. Siguiente paso: scripts/start-ui.sh
 ```
 
-Para ver todo lo que quedó corriendo:
+Para ver todo lo que quedó corriendo usamos estos comandos:
 
 ```bash
 kubectl get pods -A
@@ -103,20 +109,20 @@ require-run-as-non-root         10s   true
 
 ### Instalar el chart a mano
 
-El setup ya lo hace, pero el comando que pide la letra es este:
+El setup ya instala el chart, pero el comando que pide la letra es este:
 
 ```bash
 helm install journal ./helm-chart -n journal --create-namespace -f helm-chart/values-dev.yaml
 ```
 
-Para producción se cambia el archivo de valores. Con eso el frontend pasa a 2 réplicas y se crea el PodDisruptionBudget:
+Para producción se cambia el archivo de valores, y con eso el frontend pasa a 2 réplicas y se crea el PodDisruptionBudget:
 
 ```bash
 helm upgrade journal ./helm-chart -n journal -f helm-chart/values-prod.yaml
 kubectl get pods,pdb -n journal
 ```
 
-Para verificar el chart sin instalarlo:
+Para verificar el chart sin instalarlo se pueden usar estos dos comandos:
 
 ```bash
 helm lint ./helm-chart -f helm-chart/values-dev.yaml
@@ -136,11 +142,11 @@ scripts/start-ui.sh
   Jenkins     http://localhost:8081   (admin / admin, si corriste scripts/start-jenkins.sh)
 ```
 
-Los port-forwards quedan en segundo plano. Si se redespliega la app (por ejemplo desde Jenkins), los pods cambian y hay que volver a correr `scripts/start-ui.sh`.
+Los port-forwards quedan corriendo en segundo plano. Si se redespliega la app (por ejemplo desde Jenkins) los pods cambian, así que hay que volver a correr start-ui.sh.
 
-En Prometheus, **Status → Targets** tiene que mostrar `journal-backend` en estado `UP`.
+En Prometheus, la pantalla Status → Targets tiene que mostrar journal-backend en estado UP.
 
-Si se prefiere entrar por el Ingress, hay que correr `minikube tunnel` en otra terminal y agregar `127.0.0.1 journal.dev.local` a `/etc/hosts`. Después la app queda en <http://journal.dev.local>.
+Si se prefiere entrar por el Ingress, hay que correr minikube tunnel en otra terminal y agregar la línea "127.0.0.1 journal.dev.local" al archivo /etc/hosts. Después de eso la app queda en <http://journal.dev.local>.
 
 ## 4. Generar tráfico para el dashboard
 
@@ -148,9 +154,9 @@ Si se prefiere entrar por el Ingress, hay que correr `minikube tunnel` en otra t
 scripts/load-traffic.sh 300
 ```
 
-Durante 5 minutos simula tres lectores, alguien que crea y edita la entrada del día y peticiones con errores. Mientras tanto, en Grafana (**Dashboards → El Último Renglón**) se van llenando los paneles de RPS, latencia, CPU, memoria y negocio. Si hay más de 5 escrituras en 5 minutos, el panel de la alerta `MuchasOperaciones` pasa a **ALERTA**.
+Durante 5 minutos el script simula tres lectores, alguien que crea y edita la entrada del día y algunas peticiones con errores. Mientras tanto, en Grafana (Dashboards → El Último Renglón) se van llenando los paneles de RPS, latencia, CPU, memoria y negocio. Si hay más de 5 escrituras en 5 minutos, el panel de la alerta MuchasOperaciones pasa a ALERTA.
 
-Para consultar Prometheus directamente:
+Para consultar Prometheus directamente se pueden usar estas consultas:
 
 ```bash
 curl -s -G localhost:9090/api/v1/query --data-urlencode 'query=sum(rate(http_requests_total{namespace="journal"}[1m]))'
@@ -172,11 +178,11 @@ scripts/start-jenkins.sh
   Job: journal-pipeline → Build with Parameters
 ```
 
-En <http://localhost:8081> ya está el job `journal-pipeline`. La primera vez se lanza con **Build Now** (Jenkins todavía no conoce los parámetros porque están en el Jenkinsfile). Desde la segunda vez aparece **Build with Parameters**.
+En <http://localhost:8081> ya está creado el job journal-pipeline. La primera vez se lanza con Build Now, porque Jenkins todavía no conoce los parámetros (están definidos en el Jenkinsfile), y desde la segunda vez ya aparece Build with Parameters.
 
-El pipeline clona la rama `main` del repositorio en GitHub (se puede cambiar con la variable `REPO_BRANCH` al correr `scripts/start-jenkins.sh`), así que lo que se construye es lo que está pusheado, no lo que hay en la carpeta local.
+El pipeline clona la rama main del repositorio en GitHub (se puede cambiar con la variable REPO_BRANCH al correr start-jenkins.sh), así que lo que se construye es lo que está pusheado y no lo que hay en la carpeta local.
 
-Una corrida correcta termina así (el log completo está en `reports/jenkins-build-2-ok.log`):
+Una corrida correcta termina así (el log completo está en reports/jenkins-build-2-ok.log):
 
 ```text
 12 passed, 1 warning in 0.14s
@@ -186,7 +192,7 @@ Despliegue OK: guilleacq/journal-backend:2-6f628f8 y guilleacq/journal-frontend:
 Finished: SUCCESS
 ```
 
-Después del deploy se puede ver qué imagen quedó corriendo:
+Después del deploy se puede ver qué imagen quedó corriendo con estos comandos:
 
 ```bash
 kubectl get deploy -n journal -o wide
@@ -195,7 +201,7 @@ helm history journal -n journal
 
 ### Ver el corte por vulnerabilidad crítica
 
-En **Build with Parameters** se tilda `SIMULAR_DEPENDENCIA_VULNERABLE`. El pipeline se detiene en la etapa 3 (log en `reports/jenkins-build-3-falla-snyk.log`):
+En Build with Parameters se tilda SIMULAR_DEPENDENCIA_VULNERABLE, y el pipeline se detiene en la etapa 3 (el log está en reports/jenkins-build-3-falla-snyk.log):
 
 ```text
 >> Simulación: se agrega PyYAML==5.3 (vulnerabilidad crítica conocida)
@@ -206,7 +212,7 @@ PIPELINE DETENIDO: Snyk encontró vulnerabilidades CRÍTICAS en las dependencias
 Finished: FAILURE
 ```
 
-En la vista de etapas, de la 3 en adelante aparecen en rojo y no se publicó ni desplegó nada.
+En la vista de etapas, de la 3 en adelante aparecen en rojo, porque no se publicó ni se desplegó nada.
 
 ## 6. Análisis de seguridad e imágenes
 
@@ -214,18 +220,18 @@ En la vista de etapas, de la 3 en adelante aparecen en rojo y no se publicó ni 
 scripts/security-scans.sh
 ```
 
-Construye las imágenes y corre Semgrep, Snyk, Trivy, Dive y KubeLinter. Los resultados quedan en `reports/`:
+El script construye las imágenes y corre Semgrep, Snyk, Trivy, Dive y KubeLinter. Los resultados quedan en reports/:
 
 | Archivo | Resultado esperado |
 |---|---|
-| `semgrep-report.txt` | 0 hallazgos en `app/` y 8 en el archivo de control |
-| `snyk-report.txt` | 0 vulnerabilidades, y 2 críticas en la prueba con PyYAML 5.3 |
-| `trivy-backend.txt` | 0 críticas, 47 altas de Debian sin parche |
-| `trivy-frontend.txt` | 0 vulnerabilidades |
-| `image-layers.txt` | Capas, tamaños y eficiencia según Dive |
-| `kubelinter.txt` | `No lint errors found!` |
+| semgrep-report.txt | 0 hallazgos en app/ y 8 en el archivo de control |
+| snyk-report.txt | 0 vulnerabilidades, y 2 críticas en la prueba con PyYAML 5.3 |
+| trivy-backend.txt | 0 críticas y 47 altas de Debian sin parche |
+| trivy-frontend.txt | 0 vulnerabilidades |
+| image-layers.txt | Capas, tamaños y eficiencia según Dive |
+| kubelinter.txt | No lint errors found! |
 
-El análisis comentado de las imágenes está en `reports/image-analysis.md`.
+El análisis comentado de las imágenes está en reports/image-analysis.md.
 
 ## 7. Validar las políticas de Kyverno
 
@@ -233,7 +239,7 @@ El análisis comentado de las imágenes está en `reports/image-analysis.md`.
 scripts/kyverno-validate.sh
 ```
 
-Aplica un pod que viola cada política, otro que viola todas y uno correcto. Lo esperado es cinco rechazos y una admisión:
+El script aplica un pod que viola cada política, otro que viola todas y uno correcto. Lo esperado son cinco rechazos y una admisión:
 
 ```text
 $ kubectl apply -f k8s/policies/test/2-no-limits.yaml
@@ -245,7 +251,7 @@ pod/good-pod created
 RESULTADO: ADMITIDO (esperado)
 ```
 
-También se puede probar a mano que un Deployment con `latest` se rechaza de entrada:
+También se puede probar a mano que un Deployment con latest se rechaza de entrada:
 
 ```bash
 kubectl create deployment prueba --image=nginx:latest -n journal
@@ -255,7 +261,7 @@ kubectl create deployment prueba --image=nginx:latest -n journal
 error: failed to create deployment: admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-run-as-non-root failed: ...; Policy disallow-latest-tag failed: No se permite la etiqueta 'latest': usá una versión fija.
 ```
 
-La evidencia queda en `reports/kyverno-validation.log`.
+La evidencia queda en reports/kyverno-validation.log.
 
 ## 8. Disparar una alerta de Falco
 
@@ -263,31 +269,31 @@ La evidencia queda en `reports/kyverno-validation.log`.
 scripts/falco-trigger.sh
 ```
 
-Ejecuta dentro del backend `cat /etc/shadow` y una conexión al API server de Kubernetes, las dos sin abrir una shell. Falco las registra así:
+El script ejecuta dentro del backend un cat /etc/shadow y una conexión al API server de Kubernetes, las dos sin abrir una shell. Falco las registra así:
 
 ```text
 Warning Proceso inesperado en el backend del diario (comando=cat /etc/shadow usuario_uid=100 padre=containerd-shim pod=journal-backend-... namespace=journal ...)
 Notice Unexpected connection to K8s API Server from container | connection=10.244.0.101:36608->10.96.0.1:443 ... process=python ...
 ```
 
-Para ver las alertas de Falco en cualquier momento:
+Para ver las alertas de Falco en cualquier momento se puede usar este comando:
 
 ```bash
 kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -E "Proceso inesperado|K8s API Server"
 ```
 
-El log con la descripción del evento queda en `reports/falco-event.log`.
+El log con la descripción del evento queda en reports/falco-event.log.
 
 ## 9. Borrar todo
 
 ```bash
-scripts/teardown.sh          # desinstala la app, los operadores y sus CRDs; Minikube queda vacío
+scripts/teardown.sh          # desinstala la app, los operadores y sus CRDs, y deja Minikube vacío
 scripts/teardown.sh --all    # además borra Minikube, Jenkins y su volumen
 ```
 
 ## Problemas frecuentes
 
-- **Grafana se reinicia en loop la primera vez.** Está migrando su base de datos y tarda. El `monitoring/values.yaml` ya le da 5 minutos de margen; si igual pasa, hay que esperar.
-- **Un deploy falla con `failed calling webhook "vpol.validate.kyverno.svc-fail"`.** Kyverno no respondió a tiempo, casi siempre porque Minikube se quedó sin memoria. Ver `kubectl top node` y, si hace falta, recrear Minikube con más memoria (`minikube delete` y de nuevo `scripts/setup.sh`).
-- **Minikube no toma la memoria nueva.** `--memory` solo se aplica al crear el cluster. Si el perfil ya existía, hay que borrarlo con `minikube delete`.
-- **Los port-forwards dejan de responder.** Pasa cuando se reemplazan los pods. Se vuelve a correr `scripts/start-ui.sh`.
+- **Grafana se reinicia en loop la primera vez**: Pasa porque está migrando su base de datos y tarda. El archivo monitoring/values.yaml ya le da 5 minutos de margen, y si igual pasa hay que esperar.
+- **Un deploy falla con "failed calling webhook vpol.validate.kyverno.svc-fail"**: Significa que Kyverno no respondió a tiempo, casi siempre porque Minikube se quedó sin memoria. Conviene mirar kubectl top node y, si hace falta, recrear Minikube con más memoria (minikube delete y de nuevo setup.sh).
+- **Minikube no toma la memoria nueva**: El parámetro --memory solo se aplica al crear el cluster, así que si el perfil ya existía hay que borrarlo con minikube delete.
+- **Los port-forwards dejan de responder**: Pasa cuando se reemplazan los pods, y se arregla volviendo a correr start-ui.sh.

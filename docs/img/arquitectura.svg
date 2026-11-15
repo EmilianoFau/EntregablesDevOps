@@ -22,7 +22,7 @@
   </defs>
 
   <rect width="1400" height="860" fill="#ffffff"/>
-  <text x="700" y="38" class="t" style="font-size:22px;font-weight:700">El Último Renglón · arquitectura</text>
+  <text x="700" y="38" class="t" style="font-size:22px;font-weight:700">Arquitectura de El Último Renglón</text>
 
   <!-- Equipo y GitHub -->
   <rect x="20" y="95" width="140" height="46" rx="23" class="ppl"/>
@@ -35,7 +35,7 @@
 
   <!-- Jenkins -->
   <rect x="190" y="80" width="1020" height="175" rx="14" class="grp"/>
-  <text x="210" y="108" class="h">Jenkins · pipeline CI/CD (Jenkinsfile)</text>
+  <text x="210" y="108" class="h">Jenkins - pipeline CI/CD (Jenkinsfile)</text>
   <g>
     <rect x="210" y="150" width="100" height="56" rx="8" class="ci"/>  <text x="260" y="168" class="s">1</text><text x="260" y="188" class="t">Clonación</text>
     <rect x="322" y="150" width="100" height="56" rx="8" class="sec"/> <text x="372" y="168" class="s">2</text><text x="372" y="188" class="t">Semgrep</text>
@@ -59,7 +59,7 @@
 
   <!-- Kubernetes -->
   <rect x="20" y="390" width="1360" height="450" rx="16" class="grp"/>
-  <text x="40" y="418" class="h">Kubernetes · Minikube</text>
+  <text x="40" y="418" class="h">Kubernetes - Minikube</text>
 
   <!-- Kyverno -->
   <path d="M1044,206 C1044,300 1150,330 1150,424" class="line" marker-end="url(#a)"/>
@@ -71,7 +71,7 @@
 
   <!-- namespace journal -->
   <rect x="400" y="520" width="940" height="140" rx="12" class="ns"/>
-  <text x="416" y="542" class="lbl" style="font-weight:700">namespace journal · Helm chart</text>
+  <text x="416" y="542" class="lbl" style="font-weight:700">namespace journal - Helm chart</text>
   <path d="M932,352 L932,516" class="dash" marker-end="url(#a)"/>
   <text x="940" y="500" class="lbl">pull</text>
 
@@ -100,7 +100,7 @@
 
   <!-- monitoring -->
   <rect x="400" y="690" width="540" height="132" rx="12" class="ns"/>
-  <text x="416" y="806" class="lbl" style="font-weight:700">namespace monitoring · kube-prometheus-stack</text>
+  <text x="416" y="806" class="lbl" style="font-weight:700">namespace monitoring - kube-prometheus-stack</text>
   <rect x="430" y="722" width="190" height="62" rx="10" class="mon"/>
   <text x="525" y="744" class="t">Prometheus</text>
   <text x="525" y="765" class="s">ServiceMonitor · alertas</text>

@@ -1,6 +1,6 @@
 # Blue/green en Minikube
 
-> Este documento corresponde a los Labs 2 y 3 y se conserva como historia del proyecto. El despliegue del Lab 4 se hace con el Helm chart (`helm-chart/`) y los scripts de `scripts/`; ver el [README principal](../README.md) y el [paso a paso](../docs/paso-a-paso.md).
+> Este documento corresponde a los Labs 2 y 3 y lo dejamos como historia del proyecto. El despliegue final lo hacemos con el Helm chart (helm-chart/) y los scripts de la carpeta scripts/, que están explicados en el [README principal](../README.md) y en el [paso a paso](../docs/paso-a-paso.md).
 
 El ejemplo usa solamente dos manifiestos:
 
@@ -130,7 +130,7 @@ kubectl apply -f k8s/policies/
 kubectl get validatingpolicy
 ```
 
-En el Lab 3 eran tres `ClusterPolicy`. En el Lab 4 se sumó una cuarta (sin escalada de privilegios) y las cuatro se reescribieron como `ValidatingPolicy`, porque Kyverno 1.20 ya no acepta el formato anterior. Para comprobar que funcionan, este manifiesto no conforme debe ser **rechazado** (`scripts/kyverno-validate.sh` prueba cada política por separado):
+En el Lab 3 eran tres ClusterPolicy. En el trabajo final sumamos una cuarta (sin escalada de privilegios) y reescribimos las cuatro como ValidatingPolicy, porque Kyverno 1.20 ya no acepta el formato anterior. Para comprobar que funcionan, este manifiesto no conforme tiene que ser **rechazado** (el script kyverno-validate.sh prueba cada política por separado):
 
 ```bash
 kubectl apply -f k8s/policies/test/noncompliant-all.yaml
