@@ -178,7 +178,7 @@ scripts/start-jenkins.sh
   Job: journal-pipeline → Build with Parameters
 ```
 
-En <http://localhost:8081> ya está creado el job journal-pipeline. La primera vez se lanza con Build Now, porque Jenkins todavía no conoce los parámetros (están definidos en el Jenkinsfile), y desde la segunda vez ya aparece Build with Parameters.
+En <http://localhost:8081> ya está creado el job journal-pipeline, y se lanza con Build with Parameters.
 
 El pipeline clona la rama main del repositorio en GitHub (se puede cambiar con la variable REPO_BRANCH al correr start-jenkins.sh), así que lo que se construye es lo que está pusheado y no lo que hay en la carpeta local.
 

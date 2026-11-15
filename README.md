@@ -316,7 +316,7 @@ El log completo con la descripción del evento está en [reports/falco-event.log
 
 **La imagen oficial de Snyk no existe para arm64.** Funciona emulada pero es lenta, por eso en Jenkins instalamos directamente el binario de Snyk para arm64.
 
-**El primer build después de reiniciar Jenkins no tenía parámetros.** JCasC crea el job al arrancar, pero los parámetros están definidos dentro del Jenkinsfile, así que Jenkins recién los conoce después de la primera corrida. En el build 5 la variable ENTORNO llegó vacía y Helm buscó un archivo values-.yaml, por lo que cambiamos el Jenkinsfile para que use dev cuando el parámetro no está.
+**El primer build después de reiniciar Jenkins no tenía parámetros.** JCasC crea el job al arrancar, pero los parámetros están definidos dentro del Jenkinsfile, así que Jenkins recién los conoce después de la primera corrida. En el build 5 la variable ENTORNO llegó vacía y Helm buscó un archivo values-.yaml, así que cambiamos el Jenkinsfile para que use dev cuando el parámetro no está y además declaramos los parámetros en casc.yaml, para que el job los tenga desde el primer build.
 
 **Pequeños detalles del entorno.** Jenkins no podía usar el kubeconfig de la Mac, que apunta a 127.0.0.1, y lo resolvimos conectándolo a la red de Minikube. El bash que trae macOS (3.2) falla con arrays vacíos cuando se usa set -u, y lo esquivamos con una expansión condicional en setup.sh. Por último, en el Lab 3 la descarga de reglas de Falco desde ghcr.io había devuelto error 429 (demasiados pedidos), así que seguimos con falcoctl apagado.
 
