@@ -22,7 +22,7 @@
   </defs>
 
   <rect width="1400" height="860" fill="#ffffff"/>
-  <text x="700" y="38" class="t" style="font-size:22px;font-weight:700">El Último Renglón · arquitectura del Lab 4</text>
+  <text x="700" y="38" class="t" style="font-size:22px;font-weight:700">El Último Renglón · arquitectura</text>
 
   <!-- Equipo y GitHub -->
   <rect x="20" y="95" width="140" height="46" rx="23" class="ppl"/>
@@ -30,8 +30,7 @@
   <path d="M90,141 L90,176" class="line" marker-end="url(#a)"/>
   <text x="98" y="160" class="lbl">git push</text>
   <rect x="20" y="180" width="140" height="60" rx="10" class="sto"/>
-  <text x="90" y="202" class="t">GitHub</text>
-  <text x="90" y="223" class="s">rama entrega4</text>
+  <text x="90" y="210" class="t">GitHub</text>
   <path d="M160,210 L188,210" class="line" marker-end="url(#a)"/>
 
   <!-- Jenkins -->

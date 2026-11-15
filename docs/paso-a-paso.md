@@ -174,7 +174,7 @@ scripts/start-jenkins.sh
 
 En <http://localhost:8081> ya está el job `journal-pipeline`. La primera vez se lanza con **Build Now** (Jenkins todavía no conoce los parámetros porque están en el Jenkinsfile). Desde la segunda vez aparece **Build with Parameters**.
 
-El pipeline clona la rama `entrega4` del repositorio en GitHub, así que lo que se construye es lo que está pusheado, no lo que hay en la carpeta local.
+El pipeline clona la rama `main` del repositorio en GitHub (se puede cambiar con la variable `REPO_BRANCH` al correr `scripts/start-jenkins.sh`), así que lo que se construye es lo que está pusheado, no lo que hay en la carpeta local.
 
 Una corrida correcta termina así (el log completo está en `reports/jenkins-build-2-ok.log`):
 

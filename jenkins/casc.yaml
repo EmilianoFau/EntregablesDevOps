@@ -40,7 +40,7 @@ jobs:
             scm {
               git {
                 remote { url('${REPO_URL:-https://github.com/EmilianoFau/EntregablesDevOps.git}') }
-                branches('*/${REPO_BRANCH:-entrega4}')
+                branches('*/${REPO_BRANCH:-main}')
               }
             }
             scriptPath('Jenkinsfile')

@@ -48,7 +48,7 @@ docker run -d --name "$NAME" \
   -e SNYK_TOKEN -e DOCKERHUB_USER -e DOCKERHUB_TOKEN \
   -e JENKINS_ADMIN_PASSWORD="${JENKINS_ADMIN_PASSWORD:-admin}" \
   -e REPO_URL="${REPO_URL:-https://github.com/EmilianoFau/EntregablesDevOps.git}" \
-  -e REPO_BRANCH="${REPO_BRANCH:-entrega4}" \
+  -e REPO_BRANCH="${REPO_BRANCH:-main}" \
   "$IMAGE" >/dev/null
 
 printf "  esperando a que Jenkins arranque"
