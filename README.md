@@ -167,6 +167,8 @@ PIPELINE DETENIDO: Snyk encontró vulnerabilidades CRÍTICAS en las dependencias
 Finished: FAILURE
 ```
 
+Después de esas tres corridas hubo tres más. El build 4 falló en el despliegue por falta de memoria en Minikube y el 5 porque el job recién recreado todavía no tenía parámetros (los dos se explican en la sección de problemas). El build 6, sobre el cluster nuevo, terminó bien en 60 segundos.
+
 ![Vista de etapas en Jenkins](docs/img/jenkins-pipeline.png)
 
 ---
@@ -203,9 +205,13 @@ El dashboard está en [`grafana/dashboard.json`](grafana/dashboard.json). El set
 | Recursos por pod | CPU y memoria (working set) de cada pod del namespace |
 | Negocio | Entradas por estado de ánimo, escrituras por minuto según tipo, estado de la alerta |
 
-Para llenarlo usamos `scripts/load-traffic.sh`, que durante unos minutos simula usuarios leyendo, una persona escribiendo y editando la entrada del día, y algunas peticiones con errores (404 y 422). Durante la prueba Prometheus registró unas 27 peticiones por segundo.
+Para llenarlo usamos `scripts/load-traffic.sh`, que durante unos minutos simula usuarios leyendo, una persona escribiendo y editando la entrada del día, y algunas peticiones con errores (404 y 422). En la corrida de la captura el backend atendía unas 63 peticiones por segundo con una latencia promedio menor a 1 ms y un p99 de 5 ms, sin errores 5xx. Como el script hace más de 5 escrituras en 5 minutos, la alerta `MuchasOperaciones` pasó a ALERTA, que es lo esperado.
 
 ![Dashboard de Grafana](docs/img/grafana-dashboard.png)
+
+En Prometheus, el target que crea el `ServiceMonitor` aparece en estado `UP`:
+
+![Target del backend en Prometheus](docs/img/prometheus-targets.png)
 
 ---
 
@@ -309,6 +315,8 @@ El log completo con la descripción del evento está en [`reports/falco-event.lo
 **SlimToolkit no funciona con Docker 29.** Su cliente usa la versión 1.24 de la API de Docker, que ya no está soportada. Usamos Dive, que la letra acepta como alternativa.
 
 **La imagen oficial de Snyk no existe para arm64.** Funciona emulada pero es lenta. En Jenkins instalamos el binario de Snyk para arm64 directamente.
+
+**El primer build después de reiniciar Jenkins no tenía parámetros.** El job lo crea JCasC al arrancar, y los parámetros están definidos dentro del Jenkinsfile, así que Jenkins recién los conoce después de la primera corrida. En el build 5 la variable `ENTORNO` llegó vacía y Helm buscó un archivo `values-.yaml`. Ahora el Jenkinsfile usa `dev` cuando el parámetro no está.
 
 **Pequeños detalles del entorno.** Jenkins no podía usar el kubeconfig de la Mac, que apunta a `127.0.0.1`, y lo resolvimos conectándolo a la red de Minikube. El bash que trae macOS (3.2) falla con arrays vacíos cuando se usa `set -u`, y lo esquivamos con una expansión condicional en `setup.sh`. Y en el Lab 3 la descarga de reglas de Falco desde ghcr.io había devuelto error 429 (demasiados pedidos), así que seguimos con `falcoctl` apagado.
 
