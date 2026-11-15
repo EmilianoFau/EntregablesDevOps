@@ -1,13 +1,28 @@
-# Falco — detección en tiempo de ejecución
-# Instalación: helm install falco falcosecurity/falco -n falco --create-namespace --set driver.kind=modern_ebpf --set tty=true --set falcoctl.artifact.install.enabled=false --set falcoctl.artifact.follow.enabled=false
-# Falco: Falco version: 0.45.2
+# Falco: detección en tiempo de ejecución
+# Generado: 2026-11-15 14:36:55 UTC
+# Instalación: helm install falco falcosecurity/falco --version 9.2.2 -n falco -f falco/values.yaml
 #
-# Acción sospechosa ejecutada (2026-11-03 22:10:42 UTC):
-#   kubectl exec -it deploy/journal-green -c journal -- sh -c 'echo dentro del pod; id; hostname; cat /etc/shadow; exit 0'
-# Salida en el pod: uid=100(journal) ... / cat: /etc/shadow: Permission denied (el contenedor no es root)
+# Acciones ejecutadas (ninguna abre una shell ni una terminal interactiva):
+#   1) kubectl exec -n journal deploy/journal-backend -c backend -- cat /etc/shadow
+#      Salida en el pod: cat: /etc/shadow: Permission denied
+command terminated with exit code 1
+#   2) kubectl exec -n journal deploy/journal-backend -c backend -- python -c "socket.create_connection(('kubernetes.default.svc', 443))"
+#      Salida en el pod: conexión abierta con el API server
 #
-# Alertas registradas por Falco:
-#   kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -E 'shell was spawned|Sensitive file'
+# Qué pasó:
+#   1) Alguien con acceso al cluster ejecutó un binario (cat) dentro del backend
+#      para leer /etc/shadow, el archivo con los hashes de contraseñas. Como el
+#      contenedor corre con UID 100 el kernel negó la lectura, pero Falco ve la
+#      ejecución del proceso y dispara la regla propia 'Proceso inesperado en el
+#      backend del diario' (falco/values.yaml): ese contenedor solo debería
+#      ejecutar python/uvicorn.
+#   2) Desde el backend se abrió una conexión al API server de Kubernetes. La app
+#      nunca necesita hablar con el API server, así que es típico de un atacante
+#      que entró al pod y quiere reconocer el cluster. Lo detecta la regla de
+#      fábrica 'Unexpected connection to K8s API Server from container'.
+#
+# Alertas registradas:
+#   kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco | grep -E 'Sensitive file|Proceso inesperado'
 
-22:10:42.535020013: Notice A shell was spawned in a container with an attached terminal | evt_type=execve user=<NA> user_uid=100 user_loginuid=-1 process=sh proc_exepath=/usr/bin/dash parent=<NA> command=sh -c echo dentro del pod; id; hostname; cat /etc/shadow; exit 0 terminal=34816 exe_flags=EXE_LOWER_LAYER container_id=c19ae0d913b8 container_name=k8s_journal_journal-green-598b5b9788-2lt8n_default_933af5e8-c194-4972-925e-92e6fbb5295c_0 container_image_repository=journal container_image_tag=v2 k8s_pod_name=journal-green-598b5b9788-2lt8n k8s_ns_name=default
-22:10:42.619482791: Warning Sensitive file opened for reading by non-trusted program | file=/etc/shadow gparent=<NA> ggparent=<NA> gggparent=<NA> evt_type=openat user=<NA> user_uid=100 user_loginuid=-1 process=cat proc_exepath=/usr/bin/cat parent=sh command=cat /etc/shadow terminal=34816 container_id=c19ae0d913b8 container_name=k8s_journal_journal-green-598b5b9788-2lt8n_default_933af5e8-c194-4972-925e-92e6fbb5295c_0 container_image_repository=journal container_image_tag=v2 k8s_pod_name=journal-green-598b5b9788-2lt8n k8s_ns_name=default
+14:36:46.041040329: Warning Proceso inesperado en el backend del diario (comando=cat /etc/shadow usuario_uid=100 padre=containerd-shim pod=journal-backend-6b999c97bb-hs8zc namespace=journal imagen=guilleacq/journal-backend:dev) container_id=342936f8cb3b container_name=k8s_backend_journal-backend-6b999c97bb-hs8zc_journal_5cf4c33a-2551-4407-b66e-f2a66494ecf2_0 container_image_repository=guilleacq/journal-backend container_image_tag=dev k8s_pod_name=journal-backend-6b999c97bb-hs8zc k8s_ns_name=journal
+14:36:47.472895788: Notice Unexpected connection to K8s API Server from container | connection=10.244.0.101:36608->10.96.0.1:443 lport=443 rport=36608 fd_type=ipv4 fd_proto=tcp evt_type=connect user=<NA> user_uid=100 user_loginuid=-1 process=python proc_exepath=/usr/local/bin/python3.13 parent=containerd-shim command=python -c import socket; socket.create_connection(('kubernetes.default.svc', 443), 3); print('conexión abierta con el API server') terminal=0 container_id=342936f8cb3b container_name=k8s_backend_journal-backend-6b999c97bb-hs8zc_journal_5cf4c33a-2551-4407-b66e-f2a66494ecf2_0 container_image_repository=guilleacq/journal-backend container_image_tag=dev k8s_pod_name=journal-backend-6b999c97bb-hs8zc k8s_ns_name=journal

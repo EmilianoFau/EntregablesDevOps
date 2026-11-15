@@ -181,7 +181,7 @@ pipeline {
             echo "Despliegue OK: ${env.BACKEND_IMAGE}:${env.TAG} y ${env.FRONTEND_IMAGE}:${env.TAG} corriendo en ${env.NAMESPACE}"
         }
         failure {
-            echo "PIPELINE DETENIDO en la etapa '${env.STAGE_NAME}'. Revisar el log y los reportes archivados."
+            echo 'PIPELINE DETENIDO. La etapa que falló aparece en rojo en la vista del pipeline; los reportes quedaron archivados.'
         }
     }
 }

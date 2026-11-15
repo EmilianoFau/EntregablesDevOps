@@ -96,7 +96,7 @@ fi
 
 step "8/8 Despliegue con Helm"
 helm upgrade --install journal ./helm-chart -n "$APP_NAMESPACE" \
-  -f helm-chart/values-dev.yaml "${HELM_IMAGE_ARGS[@]}" --wait --timeout 5m
+  -f helm-chart/values-dev.yaml ${HELM_IMAGE_ARGS[@]+"${HELM_IMAGE_ARGS[@]}"} --wait --timeout 5m
 kubectl get pods -n "$APP_NAMESPACE"
 helm test journal -n "$APP_NAMESPACE" --logs
 ok "La app responde. Siguiente paso: scripts/start-ui.sh"

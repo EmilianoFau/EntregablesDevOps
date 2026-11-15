@@ -1,0 +1,51 @@
+# Kyverno: validación de políticas de admisión
+# Generado: 2026-11-15 14:35:36 UTC · commit 8f1b67d
+
+$ kubectl get validatingpolicy
+NAME                            AGE   READY
+disallow-latest-tag             15h   true
+disallow-privilege-escalation   15h   true
+require-requests-limits         15h   true
+require-run-as-non-root         15h   true
+
+----------------------------------------------------------------
+$ kubectl apply -f k8s/policies/test/1-latest-tag.yaml
+Error from server: error when creating "k8s/policies/test/1-latest-tag.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy disallow-latest-tag failed: No se permite la etiqueta 'latest': usá una versión fija.
+RESULTADO: RECHAZADO por Kyverno (esperado)
+
+----------------------------------------------------------------
+$ kubectl apply -f k8s/policies/test/2-no-limits.yaml
+Error from server: error when creating "k8s/policies/test/2-no-limits.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-requests-limits failed: Todos los contenedores deben definir resources.requests y resources.limits de cpu y memory.
+RESULTADO: RECHAZADO por Kyverno (esperado)
+
+----------------------------------------------------------------
+$ kubectl apply -f k8s/policies/test/3-root.yaml
+Error from server: error when creating "k8s/policies/test/3-root.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-run-as-non-root failed: Se requiere securityContext.runAsNonRoot: true en el pod o en todos sus contenedores.
+RESULTADO: RECHAZADO por Kyverno (esperado)
+
+----------------------------------------------------------------
+$ kubectl apply -f k8s/policies/test/4-privilege-escalation.yaml
+Error from server: error when creating "k8s/policies/test/4-privilege-escalation.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy disallow-privilege-escalation failed: Cada contenedor debe declarar securityContext.allowPrivilegeEscalation: false.
+RESULTADO: RECHAZADO por Kyverno (esperado)
+
+----------------------------------------------------------------
+$ kubectl apply -f k8s/policies/test/noncompliant-all.yaml
+Error from server: error when creating "k8s/policies/test/noncompliant-all.yaml": admission webhook "vpol.validate.kyverno.svc-fail" denied the request: Policy require-requests-limits failed: Todos los contenedores deben definir resources.requests y resources.limits de cpu y memory.; Policy require-run-as-non-root failed: Se requiere securityContext.runAsNonRoot: true en el pod o en todos sus contenedores.; Policy disallow-latest-tag failed: No se permite la etiqueta 'latest': usá una versión fija.; Policy disallow-privilege-escalation failed: Cada contenedor debe declarar securityContext.allowPrivilegeEscalation: false.
+RESULTADO: RECHAZADO por Kyverno (esperado)
+
+----------------------------------------------------------------
+$ kubectl apply -f k8s/policies/test/0-compliant.yaml
+pod/good-pod created
+RESULTADO: ADMITIDO (esperado)
+
+----------------------------------------------------------------
+Los pods de la app (desplegados con Helm) también pasan las 4 políticas:
+$ kubectl get pods -n journal
+NAME                               READY   STATUS    RESTARTS   AGE
+journal-backend-6b999c97bb-hs8zc   1/1     Running   0          2m39s
+journal-frontend-df858f784-vj5ct   1/1     Running   0          2m39s
+
+$ kubectl get policyreport -n journal
+NAME                                   KIND   NAME                               PASS   FAIL   WARN   ERROR   SKIP   AGE
+5c3a5c6a-0312-4340-952b-58ab595edb6e   Pod    journal-frontend-df858f784-vj5ct   4      0      0      0       0      1s
+5cf4c33a-2551-4407-b66e-f2a66494ecf2   Pod    journal-backend-6b999c97bb-hs8zc   4      0      0      0       0      6s
