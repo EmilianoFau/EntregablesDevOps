@@ -48,8 +48,7 @@ pipeline {
                 sh '''
                     # Reporte completo: reglas propias + reglas oficiales de Python.
                     semgrep scan --metrics=off --config semgrep/rules.yaml --config p/python \
-                        --exclude tests --text --output reports/semgrep-report.txt app/ || true
-                    cat reports/semgrep-report.txt
+                        --exclude tests --text app/ 2>&1 | tee reports/semgrep-report.txt || true
                     # Corte: cualquier hallazgo de severidad ERROR detiene el pipeline.
                     semgrep scan --metrics=off --config semgrep/rules.yaml --config p/python \
                         --exclude tests --severity ERROR --error --quiet app/
